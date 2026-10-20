@@ -287,6 +287,7 @@ Each file below was written by a script in this repo. Open the file for N, p50, 
 | Report | What it measured |
 |---|---|
 | [results/LOADTEST-REPORT.md](results/LOADTEST-REPORT.md) | Added latency of BleedStop versus a local mock upstream on the same machine (`npm run loadtest`) |
+| [results/MULTI-INSTANCE-REPORT.md](results/MULTI-INSTANCE-REPORT.md) | 3 replicas and Postgres, short race from GitHub Actions job `kind-race` |
 | [results/INJECTION-EVAL.md](results/INJECTION-EVAL.md) | Phrase-list recall and false positive rate on dev, held-out, and deepset (`npm run eval:injection`) |
 | [results/CLASSIFIER-REPORT.md](results/CLASSIFIER-REPORT.md) | Earlier torch classifier run. The injection eval above did not rerun the sidecar |
 | [results/BROWSER-CLASSIFIER-REPORT.md](results/BROWSER-CLASSIFIER-REPORT.md) | In-browser demo model. Not the server check |
@@ -304,14 +305,14 @@ A call that also waits on a real model provider is dominated by that provider. T
 
 The same injection script, phrase list only, cutoff 0.6, normaliser off: dev recall 53/55 (N=112, benign 57, FPR 0/57), held-out 9/40 (N=80, FPR 0/40), deepset test 1/60 (N=116, FPR 0/56), deepset train 10/203 (N=546, FPR 0/343). Lowering the cutoff to 0.3 did not raise dev recall and raised dev FPR to 1/57, so the cutoff stayed 0.6. Normalising did not raise dev recall. The classifier sidecar was not running, so this script did not measure it.
 
-There is no `results/MULTI-INSTANCE-REPORT.md`. `deploy/k8s/race.js` writes it. Docker is not installed on the machine that prepared this README, so the race was not run and no spend number is filled in. The GitHub Actions job `kind-race` is the run that can produce it.
+The 3-replica race was not run on this Windows machine (Docker is not installed here). GitHub Actions job `kind-race` ran `node deploy/k8s/race.js --url http://127.0.0.1:3000 --n 80` on linux, AMD EPYC 7763 x 4, Node v20.20.2, 2026-10-20T19:54:22.016Z. Ceiling $1. N=80, errors 0, ALLOW 2, LIMIT 58, DENY 20, charged $0.574, max spendAfter $0.574, over ceiling: no. Full row: `results/MULTI-INSTANCE-REPORT.md`.
 
 ## Limits
 
 - The server classifier is off unless `BLEEDSTOP_DETECTOR` is set. This README's injection table is the phrase list.
 - The browser classifier on the demo does not enforce anything on the server.
 - `BLEEDSTOP_NORMALIZE` is off. On the dev set it did not raise recall.
-- Postgres budget locking and the 3-replica race were not measured here. Memory is still the default store.
+- Postgres is optional (`BUDGET_STORE=postgres`). Memory is still the default store. One short 3-replica race is in `results/MULTI-INSTANCE-REPORT.md` (N=80 on the CI runner). It is not a long load test.
 - The identity graph in `src/cluster.js` is shared inside one process. Budgets and idempotency keys are per tenant. Two tenants do not share dollars. They can still share a cluster id in that process.
 - Admin login can use a generic OIDC issuer (`OIDC_ISSUER`). This is not SAML. The Keycloak compose file was not started here.
 - Grafana Cloud is documented as env vars only in `docs/OBSERVABILITY.md`. No account was created. Metrics stay on `GET /metrics`. Traces are sent only if `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
