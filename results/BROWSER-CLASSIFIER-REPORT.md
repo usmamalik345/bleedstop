@@ -26,6 +26,8 @@ Method: Playwright drives Google Chrome headless. It loads the page, clicks "Sub
 | Run | Model download + init | Inference p50 | p90 | max |
 |---|---|---|---|---|
 | Local (model served from localhost) | 2.9 s | 244.8 ms | 274.4 ms | 286.2 ms |
-| LIVE (bleedstop-demo.vercel.app, model from GitHub Pages) | LIVE_LOAD | LIVE_P50 | LIVE_P90 | LIVE_MAX |
+| LIVE (bleedstop-demo.vercel.app, model from GitHub Pages) | 15.0 s | 289.5 ms | 337.5 ms | 337.7 ms |
 
 These are box measurements (8 hardware threads, used single threaded). A visitor's laptop or phone will differ, and a first visit downloads 256 MB.
+
+Live run on 2026-10-20: the "Subtle injection" input returned **DENY** in the browser (score 1.000). The server regex verdict for the same input was **ALLOW**. GitHub Pages serves the model parts gzip compressed, so the live transfer was about **219 MB** (217 MB of model parts plus a 2.0 MB tokenizer) for a 256 MB model, plus about 3.1 MB of onnxruntime-web from jsDelivr. Scores in the live run matched the local and Python runs exactly.
