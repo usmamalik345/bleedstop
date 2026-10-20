@@ -34,7 +34,8 @@
     "bench:openai": "node benchmark/openai/run.js --out results/openai-proxy.json",
     "bench:classifier": "python classifier/benchmark.py --out results/classifier-benchmark.json --md results/CLASSIFIER-REPORT.md",
     "obs:up": "docker compose -f deploy/observability/docker-compose.yml up -d",
-    "obs:traffic": "node deploy/observability/traffic.js 120"
+    "obs:traffic": "node deploy/observability/traffic.js 120",
+    "bench:openai:real": "node benchmark/openai/run-real.js --n 20 --cap 64 --out results/real-upstream.json"
   },
   "engines": {
     "node": ">=18"

@@ -243,6 +243,10 @@ Point an OpenAI SDK at `<bleedstop>/v1`. `POST /v1/chat/completions` (streaming 
 
 Pricing in the flood uses the policy rate of $0.01 per 1k tokens with tokens approximated as chars/4.
 
+**Real upstream:** not measured yet. `benchmark/openai/run-real.js` is ready to run against Groq or OpenRouter free tiers, but no provider key was available. Status and method are in `results/REAL-UPSTREAM-REPORT.md`. Every proxy number above is against the mock.
+
+**Hosted classifier:** `deploy/hf-space/` is a Hugging Face Docker Space (CPU basic) that bakes the model into the image. Locally the built image answered `/classify` in about 90 to 150 ms. The live demo's "Subtle injection" button shows which detector answered. Until `CLASSIFIER_URL` is set on Vercel it reports "regex only (classifier not configured)".
+
 ### 4. OpenTelemetry GenAI spans and observability stack
 
 Spans follow the OTel GenAI semantic conventions: `chat {model}` with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens/output_tokens`, and `execute_tool {name}` with `gen_ai.tool.name`. `deploy/observability/` holds a Docker Compose stack (OTel Collector with span metrics, Tempo, Prometheus with 6 alert rules, Grafana with a provisioned dashboard). Run `npm run obs:up`, start BleedStop with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`, then `npm run obs:traffic`.
