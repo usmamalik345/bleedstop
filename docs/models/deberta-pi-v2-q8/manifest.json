@@ -1,0 +1,19 @@
+{
+ "source": "protectai/deberta-v3-base-prompt-injection-v2",
+ "quantization": "MatMulNBits 8 bit block 32 symmetric + uint8 word embeddings",
+ "bytes": 256175401,
+ "sha256": "5a7e1bc68badf05cc15c4b6f9089392d112d3c18ca39214faf434956197bdf5d",
+ "parts": [
+  "model.part0",
+  "model.part1",
+  "model.part2",
+  "model.part3",
+  "model.part4",
+  "model.part5"
+ ],
+ "labels": {
+  "0": "SAFE",
+  "1": "INJECTION"
+ },
+ "maxLength": 512
+}

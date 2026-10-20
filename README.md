@@ -245,7 +245,7 @@ Pricing in the flood uses the policy rate of $0.01 per 1k tokens with tokens app
 
 **Real upstream:** not measured yet. `benchmark/openai/run-real.js` is ready to run against Groq or OpenRouter free tiers, but no provider key was available. Status and method are in `results/REAL-UPSTREAM-REPORT.md`. Every proxy number above is against the mock.
 
-**Hosted classifier:** `deploy/hf-space/` is a Hugging Face Docker Space (CPU basic) that bakes the model into the image. Locally the built image answered `/classify` in about 90 to 150 ms. The live demo's "Subtle injection" button shows which detector answered. Until `CLASSIFIER_URL` is set on Vercel it reports "regex only (classifier not configured)".
+**Classifier on the live demo (in browser):** free Docker hosting for the sidecar was not available (Hugging Face Docker Spaces need PRO). The demo can instead run the same DeBERTa v2 model in the visitor's browser with onnxruntime-web, using an 8 bit weight only build (256 MB, served from GitHub Pages, loaded only on click). Against the fp32 ONNX it gave identical labels on the held out, dev and deepset test sets. Single threaded inference took p50 245 ms in headless Chrome on the build box. Server side enforcement on the live demo remains regex only, and the page says so. Details: `results/BROWSER-CLASSIFIER-REPORT.md`. The FastAPI sidecar (`classifier/`, `deploy/hf-space/`) is still the way to enforce with the classifier on the server.
 
 ### 4. OpenTelemetry GenAI spans and observability stack
 
