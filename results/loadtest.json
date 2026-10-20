@@ -1,0 +1,223 @@
+{
+  "hardware": {
+    "date": "2026-10-20T19:17:15.545Z",
+    "platform": "win32 10.0.22621",
+    "arch": "x64",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz",
+    "cpuCount": 8,
+    "memBytes": 34073251840,
+    "node": "v24.13.0"
+  },
+  "durationSec": 6,
+  "connections": 24,
+  "ceilingUsd": 5,
+  "scenarios": {
+    "normal_users": {
+      "expect": "ALLOW",
+      "mock": {
+        "n": 48788,
+        "errors": 0,
+        "elapsedSec": 6.016,
+        "rps": 8109.24,
+        "decisions": {},
+        "chargedUsd": 0,
+        "overCeiling": 0,
+        "p50": 2.416,
+        "p95": 5.32,
+        "p99": 7.792
+      },
+      "bleedstop": {
+        "n": 25455,
+        "errors": 0,
+        "elapsedSec": 6.014,
+        "rps": 4232.631,
+        "decisions": {
+          "ALLOW": 25455
+        },
+        "chargedUsd": 381.825,
+        "overCeiling": 0,
+        "p50": 5.138,
+        "p95": 9.451,
+        "p99": 14.511
+      },
+      "addedLatencyMs": {
+        "p50": 2.722,
+        "p95": 4.131,
+        "p99": 6.719
+      },
+      "autocannon": {
+        "requestsPerSec": 5228.67,
+        "p50": 4,
+        "p90": 6,
+        "p97_5": 8,
+        "p99": 10,
+        "errors": 0,
+        "timeouts": 0,
+        "non2xx": 0,
+        "total": 31366
+      },
+      "maxClusterSpendUsd": 0.015,
+      "correctness": {
+        "correct": 25455,
+        "n": 25455,
+        "rule": "ALLOW (fresh unpaid user, 200 tokens)"
+      }
+    },
+    "leaked_key_flood": {
+      "expect": "ceiling",
+      "mock": {
+        "n": 51648,
+        "errors": 0,
+        "elapsedSec": 6.018,
+        "rps": 8582.88,
+        "decisions": {},
+        "chargedUsd": 0,
+        "overCeiling": 0,
+        "p50": 2.294,
+        "p95": 5.075,
+        "p99": 6.309
+      },
+      "bleedstop": {
+        "n": 17900,
+        "errors": 0,
+        "elapsedSec": 6.016,
+        "rps": 2975.388,
+        "decisions": {
+          "ALLOW": 14,
+          "LIMIT": 46,
+          "DENY": 17840
+        },
+        "chargedUsd": 4.338,
+        "overCeiling": 0,
+        "p50": 7.773,
+        "p95": 12.033,
+        "p99": 15.909
+      },
+      "addedLatencyMs": {
+        "p50": 5.479,
+        "p95": 6.958,
+        "p99": 9.6
+      },
+      "autocannon": {
+        "requestsPerSec": 2178,
+        "p50": 10,
+        "p90": 12,
+        "p97_5": 14,
+        "p99": 16,
+        "errors": 0,
+        "timeouts": 0,
+        "non2xx": 0,
+        "total": 13064
+      },
+      "maxClusterSpendUsd": 4.338,
+      "correctness": {
+        "correct": 17900,
+        "n": 17900,
+        "rule": "ALLOW, LIMIT or DENY, and spendAfter never above that response's ceiling"
+      }
+    },
+    "retry_storm": {
+      "expect": "velocity_or_ceiling",
+      "mock": {
+        "n": 55545,
+        "errors": 0,
+        "elapsedSec": 6.017,
+        "rps": 9231.106,
+        "decisions": {},
+        "chargedUsd": 0,
+        "overCeiling": 0,
+        "p50": 2.18,
+        "p95": 4.586,
+        "p99": 5.567
+      },
+      "bleedstop": {
+        "n": 28993,
+        "errors": 0,
+        "elapsedSec": 6.027,
+        "rps": 4810.446,
+        "decisions": {
+          "ALLOW": 60,
+          "DENY": 28933
+        },
+        "chargedUsd": 0.9,
+        "overCeiling": 0,
+        "p50": 4.802,
+        "p95": 7.556,
+        "p99": 9.267
+      },
+      "addedLatencyMs": {
+        "p50": 2.622,
+        "p95": 2.97,
+        "p99": 3.7
+      },
+      "autocannon": {
+        "requestsPerSec": 4483.17,
+        "p50": 4,
+        "p90": 7,
+        "p97_5": 9,
+        "p99": 10,
+        "errors": 0,
+        "timeouts": 0,
+        "non2xx": 0,
+        "total": 26898
+      },
+      "maxClusterSpendUsd": 0.9,
+      "correctness": {
+        "correct": 28993,
+        "n": 28993,
+        "rule": "ALLOW, LIMIT or DENY, and spendAfter never above that response's ceiling"
+      }
+    },
+    "token_flood": {
+      "expect": "DENY",
+      "mock": {
+        "n": 46030,
+        "errors": 0,
+        "elapsedSec": 6.022,
+        "rps": 7643.943,
+        "decisions": {},
+        "chargedUsd": 0,
+        "overCeiling": 0,
+        "p50": 2.592,
+        "p95": 5.31,
+        "p99": 6.847
+      },
+      "bleedstop": {
+        "n": 26879,
+        "errors": 0,
+        "elapsedSec": 6.019,
+        "rps": 4465.713,
+        "decisions": {
+          "DENY": 26879
+        },
+        "chargedUsd": 0,
+        "overCeiling": 0,
+        "p50": 4.861,
+        "p95": 8.724,
+        "p99": 12.03
+      },
+      "addedLatencyMs": {
+        "p50": 2.269,
+        "p95": 3.414,
+        "p99": 5.183
+      },
+      "autocannon": {
+        "requestsPerSec": 5808.67,
+        "p50": 3,
+        "p90": 5,
+        "p97_5": 6,
+        "p99": 7,
+        "errors": 0,
+        "timeouts": 0,
+        "non2xx": 0,
+        "total": 34850
+      },
+      "maxClusterSpendUsd": 0,
+      "correctness": {
+        "correct": 26879,
+        "n": 26879,
+        "rule": "DENY (400000 tokens over the unpaid per-request cap)"
+      }
+    }
+  }
+}
