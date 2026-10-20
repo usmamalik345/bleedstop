@@ -1,0 +1,28 @@
+# Render Blueprint: free demo of the BleedStop API (in memory mode, no paid providers)
+services:
+  - type: web
+    name: bleedstop-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TENANT_ID
+        value: demo
+      # Public demo only key: X-API-Key: demo-public-key maps to tenant "demo"
+      - key: BLEEDSTOP_API_KEYS
+        value: demo-public-key:demo
+      - key: RAG_ENABLED
+        value: "0"
+      - key: AGENT_MODE
+        value: template
+      - key: LOG_FORMAT
+        value: json
+      # Locks admin/operator write endpoints (user "admin"); random, never committed
+      - key: DASHBOARD_ADMIN_PASSWORD
+        generateValue: true
+      - key: DASHBOARD_SESSION_SECRET
+        generateValue: true

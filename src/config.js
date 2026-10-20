@@ -59,7 +59,9 @@ export const config = {
    * Roles: viewer < operator < admin
    * Empty = local learning mode (dashboard writes stay open).
    */
-  dashboardUsersRaw: process.env.DASHBOARD_USERS || "",
+  dashboardUsersRaw:
+    process.env.DASHBOARD_USERS ||
+    (process.env.DASHBOARD_ADMIN_PASSWORD ? `admin:${process.env.DASHBOARD_ADMIN_PASSWORD}:admin` : ""),
   dashboardSessionSecret:
     process.env.DASHBOARD_SESSION_SECRET || "local-dev-session-secret",
 
