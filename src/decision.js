@@ -49,11 +49,13 @@ import { precheckAgentCall } from "./agentGuard.js";
 import { getPolicy } from "./policy.js";
 import { withSpan } from "./tracing.js";
 import { atomicPgSpend, pgBudgetEnabled } from "./db/pgBudget.js";
+import { recordAudit } from "./auditLog.js";
+import { getTenantId } from "./tenant/context.js";
 
 /** Atomic Lua ceiling in Redis mode (REDIS_ATOMIC=0 reproduces the legacy race for benchmarks). */
 const atomicMode = () => redisEnabled() && process.env.REDIS_ATOMIC !== "0";
 
-export async function decide(input) {
+async function decideInner(input) {
   const started = performance.now();
   const {
     actorId,
@@ -433,6 +435,26 @@ export async function decide(input) {
     action: finalAction,
   });
   return out;
+}
+
+export async function decide(input) {
+  const row = await decideInner(input);
+  try {
+    recordAudit({
+      action: "decide",
+      actor: String(input?.actorId || "unknown"),
+      target: String(input?.action || ""),
+      meta: {
+        tenantId: getTenantId(),
+        decision: row?.decision || null,
+        reason: row?.reason ? String(row.reason).slice(0, 300) : null,
+        clusterId: row?.clusterId || null,
+      },
+    });
+  } catch {
+    // A failed audit must not change the decision the caller already earned.
+  }
+  return row;
 }
 
 function denyResult(opts) {

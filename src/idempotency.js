@@ -3,18 +3,24 @@
  * Same idempotencyKey → same result, no double charge.
  */
 
+import { getTenantId } from "./tenant/context.js";
+
 /** @type {Map<string, object>} */
 const completed = new Map();
 const MAX = 5000;
 
+function cacheKey(key) {
+  return `${getTenantId()}\u0000${key}`;
+}
+
 export function getIdempotentResult(key) {
   if (!key) return null;
-  return completed.get(key) || null;
+  return completed.get(cacheKey(key)) || null;
 }
 
 export function setIdempotentResult(key, result) {
   if (!key) return;
-  completed.set(key, { ...result, replay: true, idempotent: true });
+  completed.set(cacheKey(key), { ...result, replay: true, idempotent: true });
   if (completed.size > MAX) {
     const first = completed.keys().next().value;
     completed.delete(first);

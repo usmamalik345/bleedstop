@@ -1,0 +1,15 @@
+# Local Keycloak for the optional OIDC check. Free image, local only.
+# This is OpenID Connect, not SAML.
+#   docker compose -f deploy/keycloak/docker-compose.yml up
+# Then set OIDC_ISSUER=http://127.0.0.1:8088/realms/bleedstop
+# and create a realm, a client, and a user in the Keycloak admin UI
+# (admin / admin on http://127.0.0.1:8088).
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev
+    ports:
+      - "8088:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin

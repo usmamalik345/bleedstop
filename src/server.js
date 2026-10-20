@@ -14,7 +14,7 @@ import { take as rateTake } from "./rateLimit.js";
 import { withSpan, initTracing } from "./tracing.js";
 import { getPolicy, describePolicy } from "./policy.js";
 import { precheckAgentCall } from "./agentGuard.js";
-import { recordAudit } from "./auditLog.js";
+import { recordAudit, listAudits, exportAuditJsonl, verifyAuditChain } from "./auditLog.js";
 import { listSpend, listReservations, UNPAID_CEILING_USD, PAID_CEILING_USD } from "./ledger.js";
 import { listClusters } from "./cluster.js";
 import { listAppKeySpend } from "./keyLedger.js";
@@ -66,7 +66,6 @@ import {
 import { getTenantId } from "./tenant/context.js";
 import { slackEnabled } from "./notify/slack.js";
 import { renderPrometheus, snapshot as metricsSnapshot } from "./metrics.js";
-import { listAudits } from "./auditLog.js";
 import { pdfCoverage } from "./pdfCoverage.js";
 import { billShockAudit } from "./audit/billShock.js";
 import { runDrill } from "./drill/scenarios.js";
@@ -222,6 +221,15 @@ app.get("/metrics", (_req, res) => {
 
 app.get("/audits", (req, res) => {
   res.json({ audits: listAudits({ limit: Number(req.query.limit || 50) }) });
+});
+
+app.get("/audits/export.jsonl", (_req, res) => {
+  res.type("application/x-ndjson");
+  res.send(exportAuditJsonl());
+});
+
+app.get("/audits/verify", (_req, res) => {
+  res.json(verifyAuditChain());
 });
 
 /** Chart-friendly aggregates for the operator dashboard */

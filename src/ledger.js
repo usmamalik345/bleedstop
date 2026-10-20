@@ -18,12 +18,17 @@ import {
 import { redisEnabled } from "./db/redis.js";
 import { incRedisSpendSync } from "./metrics.js";
 import { getPolicy } from "./policy.js";
+import { getTenantId } from "./tenant/context.js";
 
 /** @type {Record<string, number>} */
 const spendByCluster = {};
 
-/** @type {Record<string, { clusterId: string, amount: number, expiresAt: number }>} */
+/** @type {Record<string, { clusterId: string, tenantId: string, amount: number, expiresAt: number }>} */
 const reservations = {};
+
+const sep = "\u0000";
+function spendKey(clusterId) { return `${getTenantId()}${sep}${clusterId}`; }
+function resKey(idempotencyKey) { return `${getTenantId()}${sep}${idempotencyKey}`; }
 
 export const UNPAID_CEILING_USD = config.unpaidCeilingUsd;
 export const PAID_CEILING_USD = config.paidCeilingUsd;
@@ -39,78 +44,84 @@ function persistSpend(clusterId) {
   // Postgres budget mode already wrote the row inside the locked UPDATE.
   // A later absolute write would put a stale total back.
   if (process.env.BUDGET_STORE === "postgres") return;
-  wbSpend(clusterId, spendByCluster[clusterId] ?? 0);
+  wbSpend(clusterId, spendByCluster[spendKey(clusterId)] ?? 0);
 }
 
 function persistReservations() {
   if (!dbEnabled()) return;
-  enqueuePersist("reservations", () => replaceReservations(reservations));
+  const prefix = `${getTenantId()}${sep}`;
+  const mine = {};
+  for (const [k, row] of Object.entries(reservations)) {
+    if (k.startsWith(prefix)) mine[k.slice(prefix.length)] = row;
+  }
+  enqueuePersist("reservations", () => replaceReservations(mine));
 }
 
 export function getSpend(clusterId) {
   expireReservations();
-  const committed = spendByCluster[clusterId] ?? 0;
+  const tenant = getTenantId();
+  const committed = spendByCluster[spendKey(clusterId)] ?? 0;
   const reserved = Object.values(reservations)
-    .filter((r) => r.clusterId === clusterId)
+    .filter((r) => r.clusterId === clusterId && r.tenantId === tenant)
     .reduce((sum, r) => sum + r.amount, 0);
   return roundMoney(committed + reserved);
 }
 
 /** Mirror a shared (Redis) total into local memory without pushing a delta back. */
 export function setLocalSpend(clusterId, usd) {
-  spendByCluster[clusterId] = roundMoney(usd);
+  spendByCluster[spendKey(clusterId)] = roundMoney(usd);
   persistSpend(clusterId);
 }
 
 export function getCommittedSpend(clusterId) {
-  return spendByCluster[clusterId] ?? 0;
+  return spendByCluster[spendKey(clusterId)] ?? 0;
 }
 
 export function reserve(clusterId, amount, idempotencyKey) {
   expireReservations();
-  if (reservations[idempotencyKey]) {
-    return { ...reservations[idempotencyKey], replay: true };
+  const key = resKey(idempotencyKey);
+  if (reservations[key]) {
+    return { ...reservations[key], replay: true };
   }
   const row = {
     clusterId,
+    tenantId: getTenantId(),
     amount: roundMoney(amount),
     expiresAt: Date.now() + config.reserveTtlMs,
     replay: false,
   };
-  reservations[idempotencyKey] = row;
+  reservations[key] = row;
   persistReservations();
   return row;
 }
 
 export function commit(idempotencyKey, actualCost) {
   expireReservations();
-  const res = reservations[idempotencyKey];
+  const key = resKey(idempotencyKey);
+  const res = reservations[key];
   if (!res) {
     throw new Error(`Unknown or expired reservation: ${idempotencyKey}`);
   }
   const cost = roundMoney(actualCost);
-  spendByCluster[res.clusterId] = roundMoney(
-    (spendByCluster[res.clusterId] ?? 0) + cost
-  );
-  delete reservations[idempotencyKey];
+  const sk = `${res.tenantId}${sep}${res.clusterId}`;
+  spendByCluster[sk] = roundMoney((spendByCluster[sk] ?? 0) + cost);
+  delete reservations[key];
   persistSpend(res.clusterId);
   persistReservations();
-  // Shared counter for other pods (fire-and-forget; decide awaits pushSpendDelta)
   void pushSpendDelta(res.clusterId, cost);
   return {
     clusterId: res.clusterId,
     actualCost: cost,
-    spendAfter: spendByCluster[res.clusterId],
+    spendAfter: spendByCluster[sk],
   };
 }
 
 export function addSpend(clusterId, dollars) {
-  spendByCluster[clusterId] = roundMoney(
-    (spendByCluster[clusterId] ?? 0) + dollars
-  );
+  const sk = spendKey(clusterId);
+  spendByCluster[sk] = roundMoney((spendByCluster[sk] ?? 0) + dollars);
   persistSpend(clusterId);
   void pushSpendDelta(clusterId, dollars);
-  return spendByCluster[clusterId];
+  return spendByCluster[sk];
 }
 
 /**
@@ -120,7 +131,7 @@ export function addSpend(clusterId, dollars) {
 export async function syncSpendFromRedis(clusterId) {
   if (!redisEnabled()) return getCommittedSpend(clusterId);
   const remote = await redisGetSpend(clusterId);
-  const local = spendByCluster[clusterId] ?? 0;
+  const local = spendByCluster[spendKey(clusterId)] ?? 0;
 
   if (remote == null) {
     // First time Redis sees this cluster — seed it from memory
@@ -133,7 +144,7 @@ export async function syncSpendFromRedis(clusterId) {
 
   if (remote > local) {
     // Another pod already spent more — trust the shared counter
-    spendByCluster[clusterId] = remote;
+    spendByCluster[spendKey(clusterId)] = remote;
     persistSpend(clusterId);
     incRedisSpendSync();
     return remote;
@@ -151,7 +162,7 @@ export async function pushSpendDelta(clusterId, dollars) {
 }
 
 export function releaseReservation(idempotencyKey) {
-  delete reservations[idempotencyKey];
+  delete reservations[resKey(idempotencyKey)];
   persistReservations();
 }
 
@@ -174,17 +185,30 @@ export function resetLedger() {
 
 export function listSpend() {
   expireReservations();
-  return { ...spendByCluster };
+  const prefix = `${getTenantId()}${sep}`;
+  const out = {};
+  for (const [k, v] of Object.entries(spendByCluster)) {
+    if (k.startsWith(prefix)) out[k.slice(prefix.length)] = v;
+  }
+  return out;
 }
 
 export function listReservations() {
   expireReservations();
-  return { ...reservations };
+  const prefix = `${getTenantId()}${sep}`;
+  const out = {};
+  for (const [k, row] of Object.entries(reservations)) {
+    if (k.startsWith(prefix)) out[k.slice(prefix.length)] = row;
+  }
+  return out;
 }
 
-/** Load from Postgres into memory (boot). */
+/** Load from Postgres into memory (boot). Rows belong to the tenant that was current at boot. */
 export function hydrateLedger({ spend = {}, reservationsMap = {} } = {}) {
   resetLedger();
-  Object.assign(spendByCluster, spend);
-  Object.assign(reservations, reservationsMap);
+  const t = getTenantId();
+  for (const [id, v] of Object.entries(spend)) spendByCluster[`${t}${sep}${id}`] = v;
+  for (const [k, row] of Object.entries(reservationsMap)) {
+    reservations[`${t}${sep}${k}`] = { ...row, tenantId: row.tenantId || t };
+  }
 }
