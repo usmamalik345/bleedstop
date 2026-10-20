@@ -36,6 +36,9 @@ export function getSpendCeilingUsd(paid = false) {
 
 function persistSpend(clusterId) {
   if (!dbEnabled()) return;
+  // Postgres budget mode already wrote the row inside the locked UPDATE.
+  // A later absolute write would put a stale total back.
+  if (process.env.BUDGET_STORE === "postgres") return;
   wbSpend(clusterId, spendByCluster[clusterId] ?? 0);
 }
 

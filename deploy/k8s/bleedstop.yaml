@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bleedstop
+  namespace: bleedstop
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bleedstop
+  template:
+    metadata:
+      labels:
+        app: bleedstop
+    spec:
+      containers:
+        - name: bleedstop
+          image: bleedstop:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: BUDGET_STORE
+              value: postgres
+            - name: DATABASE_URL
+              value: postgres://bleedstop:bleedstop-dev@postgres:5432/bleedstop
+            - name: REDIS_URL
+              value: ""
+            - name: RAG_ENABLED
+              value: "0"
+            - name: DECIDE_RATE_PER_SEC
+              value: "0"
+            - name: BLEEDSTOP_API_KEYS
+              value: ""
+            - name: DASHBOARD_USERS
+              value: ""
+            - name: UNPAID_CEILING_USD
+              value: "1"
+            - name: LOG_FORMAT
+              value: json
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bleedstop
+  namespace: bleedstop
+spec:
+  selector:
+    app: bleedstop
+  ports:
+    - port: 3000
+      targetPort: 3000

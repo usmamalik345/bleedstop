@@ -48,6 +48,7 @@ import { observeNetwork, addPoolSpend, WINDOW_MS as NETWORK_WINDOW_MS } from "./
 import { precheckAgentCall } from "./agentGuard.js";
 import { getPolicy } from "./policy.js";
 import { withSpan } from "./tracing.js";
+import { atomicPgSpend, pgBudgetEnabled } from "./db/pgBudget.js";
 
 /** Atomic Lua ceiling in Redis mode (REDIS_ATOMIC=0 reproduces the legacy race for benchmarks). */
 const atomicMode = () => redisEnabled() && process.env.REDIS_ATOMIC !== "0";
@@ -308,16 +309,26 @@ export async function decide(input) {
     });
   // auto: re-check the ceiling atomically (Redis Lua across instances) or inside a
   // per-process lock so parallel calls cannot all pass
-  const charged = await withSpan("bleedstop.ledger.charge", { "bleedstop.atomic": atomicMode(), "bleedstop.cost_usd": estimatedCost }, async () => atomicMode()
-    ? await shared(async () => {
-        const ceiling = evaluation.ceilingUsd ?? getSpendCeilingUsd(paid);
-        const r = await atomicCharge(clusterId, estimatedCost, ceiling);
-        setLocalSpend(clusterId, r.spendUsd);
-        return r.ok
-          ? { over: false, live: Math.max(0, r.spendUsd - estimatedCost), spendAfter: r.spendUsd }
-          : { over: true, live: r.spendUsd, ceiling };
-      }, localCharge)
-    : await localCharge());
+  const charged = await withSpan("bleedstop.ledger.charge", { "bleedstop.atomic": atomicMode() || pgBudgetEnabled(), "bleedstop.cost_usd": estimatedCost, "bleedstop.budget_store": pgBudgetEnabled() ? "postgres" : (atomicMode() ? "redis" : "memory") }, async () => {
+    if (pgBudgetEnabled()) {
+      const ceiling = evaluation.ceilingUsd ?? getSpendCeilingUsd(paid);
+      const r = await atomicPgSpend({ clusterId, amount: estimatedCost, ceiling });
+      if (r.spend != null) setLocalSpend(clusterId, r.spend);
+      return r.ok
+        ? { over: false, live: Math.max(0, r.spend - estimatedCost), spendAfter: r.spend, ceiling }
+        : { over: true, live: r.spend, ceiling };
+    }
+    return atomicMode()
+      ? await shared(async () => {
+          const ceiling = evaluation.ceilingUsd ?? getSpendCeilingUsd(paid);
+          const r = await atomicCharge(clusterId, estimatedCost, ceiling);
+          setLocalSpend(clusterId, r.spendUsd);
+          return r.ok
+            ? { over: false, live: Math.max(0, r.spendUsd - estimatedCost), spendAfter: r.spendUsd }
+            : { over: true, live: r.spendUsd, ceiling };
+        }, localCharge)
+      : await localCharge();
+  });
 
   if (charged.over) {
     const denied = denyResult({

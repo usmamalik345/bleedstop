@@ -145,3 +145,37 @@ jobs:
         with:
           name: scale
           path: scale.json
+
+  kind-race:
+    # Short multi-instance ceiling check. Postgres row lock, 3 replicas, local image.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+      - run: npm ci
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: bleedstop
+      - name: Build and load the API image
+        run: |
+          docker build -t bleedstop:local .
+          kind load docker-image bleedstop:local --name bleedstop
+      - name: Apply Postgres and 3 API replicas
+        run: kubectl apply -k deploy/k8s
+      - name: Wait until the API is ready
+        run: kubectl -n bleedstop rollout status deploy/bleedstop --timeout=180s
+      - name: Race the ceiling
+        run: |
+          kubectl -n bleedstop port-forward svc/bleedstop 3000:3000 >/tmp/pf.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf http://127.0.0.1:3000/api/health && break; sleep 1; done
+          node deploy/k8s/race.js --url http://127.0.0.1:3000 --n 80 --out results/MULTI-INSTANCE-REPORT.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: multi-instance
+          path: results/MULTI-INSTANCE-REPORT.md
