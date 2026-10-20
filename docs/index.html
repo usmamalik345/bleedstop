@@ -3,7 +3,7 @@
 <style>body{font-family:system-ui,sans-serif;max-width:960px;margin:0 auto;padding:24px;background:#0b0f14;color:#e6edf3;line-height:1.55}a{color:#58a6ff}h1{margin-bottom:4px}.sub{color:#8b949e}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #30363d;padding:8px;text-align:left;vertical-align:top}th{background:#161b22}.big{font-size:1.15em;font-weight:700;color:#7ee787}pre{background:#161b22;padding:12px;overflow:auto;border-radius:6px}.btn{display:inline-block;padding:8px 14px;border:1px solid #30363d;border-radius:6px;margin:4px 6px 4px 0;text-decoration:none}</style></head><body>
 <h1>BleedStop</h1><p class="sub">Cost abuse control plane for LLM, SMS and payment APIs (OWASP LLM10). Multi tenant policies, evals, Redis scale, Postgres, Helm/K8s.</p>
 <a class="btn" href="https://github.com/usmamalik345/bleedstop">GitHub repo</a><a class="btn" href="https://github.com/usmamalik345/bleedstop/tree/master/results">Raw results</a><a class="btn" href="https://github.com/usmamalik345/bleedstop/blob/master/README-enterprise.md">Enterprise overview</a>
-<a class="btn" href="https://bleedstop-demo.vercel.app/api/health">Live demo API</a>
+<a class="btn" href="https://bleedstop-demo.vercel.app/">Live demo</a>
 <h2>Try the live demo</h2><pre>curl -s -X POST https://bleedstop-demo.vercel.app/decide \
   -H "Content-Type: application/json" -H "X-API-Key: demo-public-key" \
   -d '{"actorId":"demo-user-1","action":"llm.call","paid":false,"estimatedTokens":500,"signals":{"deviceFingerprint":"fp-demo-1"}}'

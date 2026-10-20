@@ -636,4 +636,5 @@ if (process.env.VERCEL) {
 }
 
 export { app };
+export default app;
 

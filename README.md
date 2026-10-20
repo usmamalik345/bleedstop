@@ -6,7 +6,7 @@
 **Project site:** https://usmamalik345.github.io/bleedstop/ · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
 
 ### Live demo API
-**https://bleedstop-demo.vercel.app** ([health](https://bleedstop-demo.vercel.app/api/health)) with a public, demo only key `demo-public-key` (tenant `demo`, in memory, no real providers).
+**[https://bleedstop-demo.vercel.app](https://bleedstop-demo.vercel.app/)** (interactive demo page; API health at [/api/health](https://bleedstop-demo.vercel.app/api/health)) with a public, demo only key `demo-public-key` (tenant `demo`, in memory, no real providers).
 ```bash
 curl -s -X POST https://bleedstop-demo.vercel.app/decide \
   -H "Content-Type: application/json" -H "X-API-Key: demo-public-key" \
