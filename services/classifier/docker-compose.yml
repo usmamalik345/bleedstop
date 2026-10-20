@@ -1,0 +1,7 @@
+# Local classifier sidecar. First start downloads about 256 MB of model parts.
+#   docker compose -f services/classifier/docker-compose.yml up --build
+services:
+  classifier:
+    build: .
+    ports:
+      - "8099:8099"

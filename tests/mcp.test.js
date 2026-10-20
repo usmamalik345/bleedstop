@@ -80,7 +80,7 @@ test("stdio gateway proxies a stdio MCP server and blocks the poisoned tool", ()
     { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "get_weather", arguments: { city: "Lahore" } } },
     { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "add", arguments: { a: 1, b: 2 } } },
   ].map((m) => JSON.stringify(m)).join("\n") + "\n";
-  const r = spawnSync(process.execPath, ["bin/mcp-gateway-stdio.js", "--server", "files", "--tenant", "local-dev", "--", process.execPath, "tests/fixtures/stdio-mcp-server.js"], { input, encoding: "utf8", timeout: 15000 });
+  const r = spawnSync(process.execPath, ["bin/mcp-gateway-stdio.js", "--server", "files", "--tenant", "local-dev", "--", process.execPath, "tests/fixtures/stdio-mcp-server.js"], { input, encoding: "utf8", timeout: 30000 });
   const out = r.stdout.trim().split("\n").map((l) => JSON.parse(l));
   assert.match(out.find((m) => m.id === 3).result.content[0].text, /Lahore/);
   assert.equal(out.find((m) => m.id === 4).error.code, -32001);

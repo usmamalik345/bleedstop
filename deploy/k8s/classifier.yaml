@@ -29,8 +29,10 @@ spec:
             httpGet:
               path: /health
               port: 8099
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            # First start downloads the public 256 MB model, so this waits longer than a normal probe.
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service

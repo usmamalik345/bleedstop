@@ -46,6 +46,7 @@ import { resolveClusterShared, atomicCharge, velocityIncr, velocityPeek, sharedS
 import { setLocalSpend } from "./ledger.js";
 import { observeNetwork, addPoolSpend, WINDOW_MS as NETWORK_WINDOW_MS } from "./network.js";
 import { precheckAgentCall } from "./agentGuard.js";
+import { detect } from "./detectors.js";
 import { getPolicy } from "./policy.js";
 import { withSpan } from "./tracing.js";
 import { atomicPgSpend, pgBudgetEnabled } from "./db/pgBudget.js";
@@ -100,7 +101,12 @@ async function decideInner(input) {
   const llmVelocity = atomicMode()
     ? await shared(() => velocityPeek(clusterId), () => countRecent(`${clusterId}:llm`))
     : countRecent(`${clusterId}:llm`);
-  const agentCheck = input.agent ? precheckAgentCall(input.agent, getPolicy()) : null;
+  // Default stays the phrase list. BLEEDSTOP_DETECTOR opts into the sidecar.
+  const agentCheck = input.agent
+    ? (process.env.BLEEDSTOP_DETECTOR
+      ? await detect(input.agent, getPolicy())
+      : precheckAgentCall(input.agent, getPolicy()))
+    : null;
 
   if (action === "sms.send" && isOtpFrozen(clusterId)) {
     const denied = denyResult({
@@ -423,6 +429,7 @@ async function decideInner(input) {
           : `Cluster ${clusterId} under unpaid ceiling ($${spendAfter.toFixed(3)} / $${ceilingUsd}).`,
     eventId: event.id,
     agentCheck: agentCheck ?? undefined,
+    ...(agentCheck?.detector ? { detector: agentCheck.detector } : {}),
   };
 
   if (idempotencyKey) setIdempotentResult(idempotencyKey, out);

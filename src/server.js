@@ -54,6 +54,7 @@ import {
 } from "./vendors/stripeWebhook.js";
 import { requireApiKey, apiKeysEnabled } from "./auth/apiKeys.js";
 import { precheckTwoStage, classifierEnabled } from "./classifierClient.js";
+import { detect } from "./detectors.js";
 import { openaiHandler } from "./openai/proxy.js";
 import { handleMcpMessage, gatewayMode, recentMcpAudit, runScenario } from "./mcp/gateway.js";
 import {
@@ -334,7 +335,9 @@ app.post("/agent/precheck", (req, res) => {
   const b = req.body ?? {};
   const v = validateDecide({ actorId: "precheck", action: "auth.login", agent: b });
   if (!v.ok) return res.status(400).json({ error: "invalid request", details: v.errors });
-  if (b.twoStage !== false && classifierEnabled()) return precheckTwoStage({ ...b, useClassifier: Boolean(b.useClassifier) }, getPolicy()).then((r) => res.json(r));
+  const body = { ...b, useClassifier: Boolean(b.useClassifier) };
+  if (process.env.BLEEDSTOP_DETECTOR) return detect(body, getPolicy()).then((r) => res.json(r));
+  if (b.twoStage !== false && classifierEnabled()) return precheckTwoStage(body, getPolicy()).then((r) => res.json(r));
   res.json({ ...precheckAgentCall({ ...b, useClassifier: Boolean(b.useClassifier) }, getPolicy()), firedStage: undefined, classifier: classifierEnabled() ? "on" : "off (set CLASSIFIER_URL)" });
 });
 
