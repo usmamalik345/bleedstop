@@ -12,7 +12,7 @@ before(async () => {
   for (let i = 0; i < 100; i++) { try { if ((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) return; } catch {} await new Promise((r) => setTimeout(r, 100)); }
   throw new Error("server did not start");
 });
-after(() => { srv?.kill(); mock?.close(); });
+after(() => { srv?.kill(); mock?.closeAllConnections?.(); mock?.close(); });
 const post = (path, body, actor = "t-" + Math.random()) => fetch(base + path, { method: "POST", headers: { "Content-Type": "application/json", "x-actor-id": actor }, body: JSON.stringify(body) });
 const events = (t) => t.split("\n\n").map((b) => b.replace(/^data: /, "").trim()).filter((b) => b && b !== "[DONE]").map((b) => JSON.parse(b));
 
