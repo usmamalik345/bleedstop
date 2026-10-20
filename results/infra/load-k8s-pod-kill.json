@@ -1,0 +1,19 @@
+{
+  "url": "http://127.0.0.1:30080",
+  "requests": 197036,
+  "concurrency": 32,
+  "seconds": 60.09,
+  "rps": 3279,
+  "p50": 7.97,
+  "p95": 16.14,
+  "p99": 76.17,
+  "max": 194.84,
+  "ok200": 197036,
+  "failed": 0,
+  "byStatus": {
+    "200": 197036
+  },
+  "transportErrors": {},
+  "denied": 0,
+  "firstFailures": []
+}

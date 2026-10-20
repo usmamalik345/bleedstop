@@ -1,5 +1,25 @@
 # BleedStop
 
+**Cost abuse control plane for LLM, SMS and payment APIs (OWASP LLM10 "Unbounded Consumption").** Apps call `POST /decide` before they spend money; BleedStop answers `ALLOW | LIMIT | CHALLENGE | DENY` from deterministic, per tenant rules, enforced atomically across instances via Redis.
+
+[![CI](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml)
+**Project site:** https://usmamalik345.github.io/bleedstop/ · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
+
+### Measured, not estimated (raw JSON in [`results/`](results/))
+| What | Result |
+|---|---|
+| 3 instances + Redis atomic ceiling + LB | **6,291 decisions/s**, p99 **31.9 ms**, $0.000 overspend vs a $5 ceiling ([SCALE-RESULTS](results/SCALE-RESULTS.md)) |
+| Kubernetes `rollout restart` of 6 pods under load | **287,403 requests, 0 failed**, p99 33.2 ms ([INFRA-RESULTS](results/INFRA-RESULTS.md)) |
+| Postgres stopped ~7 s mid load | 86,071 requests, 0 failed, 0 ledger rows dropped |
+| Golden set evals (12,140 labeled requests) | precision 100%, benign FP rate 0.0%, recall 48.0% ([EVAL-REPORT](results/EVAL-REPORT.md)) |
+| Attack suite | 400k char token flood 100% blocked, shared device farm 97%, retry storm 94%, normal users 0% blocked |
+| Agent guard | dev set 96.4%; held out set **22.5%** (the honest number), 0% FP ([AGENT-EVAL-REPORT](results/AGENT-EVAL-REPORT.md)) |
+
+Includes: Node SDK + Express middleware, Python SDK (`bleedstop-py`, FastAPI dependency), multi tenant YAML policy, Redis scale out, Postgres durable mode, Prometheus + OpenTelemetry, Docker Compose stack and Helm chart.
+
+---
+
+## Original overview
 **Abuse cost control plane** for Node apps: stop bot farms and leaked API keys from burning SMS/LLM budgets.
 
 This repo is built as a **portfolio / staging control plane**, not a click-toy.  

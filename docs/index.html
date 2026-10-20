@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BleedStop: cost abuse control plane</title>
+<style>body{font-family:system-ui,sans-serif;max-width:960px;margin:0 auto;padding:24px;background:#0b0f14;color:#e6edf3;line-height:1.55}a{color:#58a6ff}h1{margin-bottom:4px}.sub{color:#8b949e}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #30363d;padding:8px;text-align:left;vertical-align:top}th{background:#161b22}.big{font-size:1.15em;font-weight:700;color:#7ee787}pre{background:#161b22;padding:12px;overflow:auto;border-radius:6px}.btn{display:inline-block;padding:8px 14px;border:1px solid #30363d;border-radius:6px;margin:4px 6px 4px 0;text-decoration:none}</style></head><body>
+<h1>BleedStop</h1><p class="sub">Cost abuse control plane for LLM, SMS and payment APIs (OWASP LLM10). Multi tenant policies, evals, Redis scale, Postgres, Helm/K8s.</p>
+<a class="btn" href="https://github.com/usmamalik345/bleedstop">GitHub repo</a><a class="btn" href="https://github.com/usmamalik345/bleedstop/tree/master/results">Raw results</a><a class="btn" href="https://github.com/usmamalik345/bleedstop/blob/master/README-enterprise.md">Enterprise overview</a>
+<h2>How it works</h2>
+<p>Apps call <code>POST /decide</code> before spending. BleedStop returns <code>ALLOW | LIMIT | CHALLENGE | DENY</code> from deterministic rules. Budgets are enforced per identity cluster (device, normalised email), atomically across instances with a Redis Lua check and charge. Agent calls are pre checked for injection, exfiltration, tool loops and runaway recursion. A reconciler compares the app ledger to vendor usage and kills leaked keys (ghost spend).</p>
+<pre>Your apps (Node SDK, Python SDK, agents)
+   | POST /decide (X-API-Key -> tenant)
+   v
+Load balancer -> BleedStop x N
+   rate limit -> validate -> tenant policy (YAML) -> idempotency
+   -> identity cluster -> network signals (/24, /64, ASN)
+   -> agent guard -> rule engine -> atomic charge
+   |                         |                      |
+ Redis (ceilings,       Postgres (ledger,      /metrics, OTLP traces,
+ identity graph)        audit, policies)       JSON logs
+   v  only if ALLOW / LIMIT
+LLM / SMS / payments  --usage-->  reconciler -> kill switch</pre>
+<h2>Measured results</h2><p class="sub">All numbers from one 8 vCPU box with a mock LLM upstream, no real provider calls. Raw JSON in <a href="https://github.com/usmamalik345/bleedstop/tree/master/results">results/</a>.</p>
+<table><tr><th>Test</th><th>Result</th></tr>
+<tr><td>3 instances + Redis atomic + LB</td><td><span class="big">6,291 decisions/s</span>, p50 9.0 ms, p99 31.9 ms, 0 errors, max overspend $0.000 vs $5 ceiling</td></tr>
+<tr><td>Kubernetes rollout restart of 6 pods under load (90 s)</td><td><span class="big">287,403 requests, 0 failed</span>, p99 33.2 ms, rollout 18 s</td></tr>
+<tr><td>Docker Compose, Postgres durable mode</td><td>median 5,433 decisions/s, median p99 36.2 ms, 0 failed of 60,000</td></tr>
+<tr><td>Postgres stopped ~7 s mid load</td><td>86,071 requests, 0 failed; 86,071 of 86,071 ledger rows persisted</td></tr>
+<tr><td>Golden set evals, 12,140 labeled requests</td><td>precision 100.0%, benign FP rate 0.0%, recall 48.0% (same result via LB and in K8s)</td></tr>
+<tr><td>Attack suite (3 runs, median)</td><td>token flood 400k chars 100% blocked; farm on one device 97%; rotated signals in one /24 66.7%; retry storm 94%; same idempotency key 99.9% upstream calls prevented; normal users 0% blocked</td></tr>
+<tr><td>Agent guard</td><td>dev set 96.4% detection; held out set 22.5% detection (never tuned on); FP 0.0%; tool sequences 100% / 0% FP</td></tr>
+<tr><td>Added latency via SDK</td><td>p50 1.16 ms, p95 1.43 ms</td></tr></table>
+<h2>Architecture decision records</h2><ol>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0001-deterministic-hot-path.md">Deterministic rules on the hot path</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0002-cluster-budgets.md">Budgets per identity cluster</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0003-network-signals-nat-safety.md">IP and ASN are pool/velocity signals, never identity unions</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0004-redis-atomic-ceiling.md">Redis Lua check and charge and a shared identity graph</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0005-opentelemetry.md">OpenTelemetry tracing next to Prometheus</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0006-policy-as-validated-yaml.md">Per tenant policy in YAML, validated at boot</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0007-control-plane-hardening.md">Harden the control plane itself</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0008-agent-guard-heuristics.md">Deterministic agent guard; held out numbers are the ones we quote</a></li>
+<li><a href="https://github.com/usmamalik345/bleedstop/blob/master/docs/adr/0009-fail-policy.md">Per action fail policy and graceful Redis degradation</a></li></ol>
+<p class="sub">Not a hosted API: run locally with <code>npm install &amp;&amp; npm start</code> or the Docker Compose / Helm stack in the repo.</p>
+</body></html>

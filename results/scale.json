@@ -1,0 +1,540 @@
+{
+  "at": "2026-10-19T19:32:41.716Z",
+  "node": "v20.19.2",
+  "cpus": 8,
+  "runs": 3,
+  "n": 20000,
+  "concurrency": 64,
+  "median": {
+    "1x memory": {
+      "correctness": {
+        "allowedMedian": 338,
+        "chargedUsdMax": 4.986,
+        "overspendUsdMax": 0,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 200
+      },
+      "perf": {
+        "rps": 3785.6943963249037,
+        "p50": 15.948366999999962,
+        "p95": 25.478533999999854,
+        "p99": 34.35570299999927,
+        "non200": 0
+      }
+    },
+    "1x memory + OTel OTLP export": {
+      "correctness": {
+        "allowedMedian": 338,
+        "chargedUsdMax": 4.986,
+        "overspendUsdMax": 0,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 200
+      },
+      "perf": {
+        "rps": 2518.581200836852,
+        "p50": 23.90708000000086,
+        "p95": 37.61592199999723,
+        "p99": 52.0286300000007,
+        "non200": 0
+      }
+    },
+    "1x redis (atomic)": {
+      "correctness": {
+        "allowedMedian": 339,
+        "chargedUsdMax": 4.995,
+        "overspendUsdMax": 0,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 200
+      },
+      "perf": {
+        "rps": 3282.883402689318,
+        "p50": 18.644048999994993,
+        "p95": 25.36946600000374,
+        "p99": 33.15209600000526,
+        "non200": 0
+      }
+    },
+    "2x redis (atomic) + LB": {
+      "correctness": {
+        "allowedMedian": 333,
+        "chargedUsdMax": 4.995,
+        "overspendUsdMax": 0,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 200
+      },
+      "perf": {
+        "rps": 4957.007739277293,
+        "p50": 11.894648000001325,
+        "p95": 27.10926400000244,
+        "p99": 36.29886400000032,
+        "non200": 0
+      }
+    },
+    "3x redis (atomic) + LB": {
+      "correctness": {
+        "allowedMedian": 333,
+        "chargedUsdMax": 4.998,
+        "overspendUsdMax": 0,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 200
+      },
+      "perf": {
+        "rps": 6291.281871905662,
+        "p50": 9.007589000000735,
+        "p95": 21.118080999993253,
+        "p99": 31.893496999997296,
+        "non200": 0
+      }
+    },
+    "2x redis LEGACY (REDIS_ATOMIC=0) + LB": {
+      "correctness": {
+        "allowedMedian": 342,
+        "chargedUsdMax": 5.13,
+        "overspendUsdMax": 0.13,
+        "distinctClusterIdsMax": 1,
+        "unrelatedDistinctClusterIdsMin": 100
+      }
+    }
+  },
+  "checks": {
+    "rateLimit": {
+      "sent": 1000,
+      "seconds": 0.48420228399999904,
+      "ok": 247,
+      "limited429": 753,
+      "expectedMaxOk": 249
+    },
+    "redisOutage": {
+      "sent": 4000,
+      "redisKilledAtRequest": 1000,
+      "http200": 4000,
+      "non200": 0,
+      "degradedCounter": 32
+    }
+  },
+  "raw": [
+    {
+      "run": 1,
+      "topology": "1x memory",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3785.6943963249037,
+        "p50": 15.948366999999962,
+        "p95": 25.478533999999854,
+        "p99": 34.35570299999927,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 1,
+      "topology": "1x memory + OTel OTLP export",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 2518.581200836852,
+        "p50": 23.90708000000086,
+        "p95": 38.66903600000114,
+        "p99": 59.26732700000139,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 1,
+      "topology": "1x redis (atomic)",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3282.883402689318,
+        "p50": 18.241181999997934,
+        "p95": 32.987261000002036,
+        "p99": 37.54138400000011,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 341,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 1,
+      "topology": "2x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 4957.007739277293,
+        "p50": 11.77274099999704,
+        "p95": 27.10926400000244,
+        "p99": 36.29886400000032,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 1,
+      "topology": "3x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 6291.281871905662,
+        "p50": 9.007589000000735,
+        "p95": 19.47617000000173,
+        "p99": 31.533918000000995,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 1,
+      "topology": "2x redis LEGACY (REDIS_ATOMIC=0) + LB",
+      "perf": null,
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 100,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "1x memory",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3991.1091848705514,
+        "p50": 15.24429599999712,
+        "p95": 23.316360999997414,
+        "p99": 32.04380500000116,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "1x memory + OTel OTLP export",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 2547.6474146236214,
+        "p50": 23.850268999995023,
+        "p95": 34.92631600000459,
+        "p99": 52.0286300000007,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "1x redis (atomic)",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3237.5599707944093,
+        "p50": 19.152179999997315,
+        "p95": 25.36946600000374,
+        "p99": 33.15209600000526,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 336,
+        "chargedUsd": 4.992,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "2x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 4555.62793043685,
+        "p50": 12.15576899998996,
+        "p95": 32.52105599999777,
+        "p99": 36.30387300001166,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "3x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 5097.427532578222,
+        "p50": 10.659404999998515,
+        "p95": 30.079968999998528,
+        "p99": 37.32689299999038,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 334,
+        "chargedUsd": 4.998,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 2,
+      "topology": "2x redis LEGACY (REDIS_ATOMIC=0) + LB",
+      "perf": null,
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 100,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 344,
+        "chargedUsd": 5.016,
+        "overspendUsd": 0.016,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "1x memory",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3704.3354074506715,
+        "p50": 16.109727999995812,
+        "p95": 25.619163999988814,
+        "p99": 35.8706269999966,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "1x memory + OTel OTLP export",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 2457.050805966815,
+        "p50": 24.822945000007167,
+        "p95": 37.61592199999723,
+        "p99": 46.98675300000468,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 338,
+        "chargedUsd": 4.986,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "1x redis (atomic)",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 3363.7648712276223,
+        "p50": 18.644048999994993,
+        "p95": 23.669177999996464,
+        "p99": 29.27205899999535,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 339,
+        "chargedUsd": 4.989,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "2x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 4997.361790264999,
+        "p50": 11.894648000001325,
+        "p95": 24.450513999996474,
+        "p99": 33.35209899999609,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "3x redis (atomic) + LB",
+      "perf": {
+        "requests": 20000,
+        "concurrency": 64,
+        "rps": 6357.423440096435,
+        "p50": 8.53183999999601,
+        "p95": 21.118080999993253,
+        "p99": 31.893496999997296,
+        "non200": 0,
+        "denied": 0
+      },
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 200,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 333,
+        "chargedUsd": 4.995,
+        "overspendUsd": 0,
+        "distinctClusterIds": 1
+      }
+    },
+    {
+      "run": 3,
+      "topology": "2x redis LEGACY (REDIS_ATOMIC=0) + LB",
+      "perf": null,
+      "correctness": {
+        "unrelatedActors": 200,
+        "unrelatedDistinctClusterIds": 100,
+        "requests": 2000,
+        "concurrency": 100,
+        "ceilingUsd": 5,
+        "allowed": 342,
+        "chargedUsd": 5.13,
+        "overspendUsd": 0.13,
+        "distinctClusterIds": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "url": "http://127.0.0.1:30080",
+  "requests": 186414,
+  "concurrency": 32,
+  "seconds": 60.06,
+  "rps": 3104,
+  "p50": 8.77,
+  "p95": 16.31,
+  "p99": 78.18,
+  "max": 196.54,
+  "ok200": 186383,
+  "failed": 31,
+  "byStatus": {
+    "0": 31,
+    "200": 186383
+  },
+  "transportErrors": {
+    "ECONNRESET": 31
+  },
+  "denied": 0,
+  "firstFailures": [
+    {
+      "atSec": 13.79,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 13.79,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 13.79,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 13.79,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 13.8,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 18.17,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.57,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.57,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.57,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 22.6,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 31.35,
+      "status": 0,
+      "err": "ECONNRESET"
+    },
+    {
+      "atSec": 31.35,
+      "status": 0,
+      "err": "ECONNRESET"
+    }
+  ]
+}

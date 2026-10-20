@@ -1,0 +1,101 @@
+{
+  "url": "http://127.0.0.1:8080",
+  "requests": 157239,
+  "concurrency": 32,
+  "seconds": 40,
+  "rps": 3931,
+  "p50": 6.57,
+  "p95": 20.11,
+  "p99": 30.8,
+  "max": 118.73,
+  "ok200": 157200,
+  "failed": 39,
+  "byStatus": {
+    "200": 157200,
+    "502": 39
+  },
+  "transportErrors": {},
+  "denied": 0,
+  "firstFailures": [
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    },
+    {
+      "atSec": 4.93,
+      "status": 502
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "url": "http://127.0.0.1:30080",
+  "requests": 222986,
+  "concurrency": 32,
+  "seconds": 70.02,
+  "rps": 3185,
+  "p50": 7.84,
+  "p95": 16.59,
+  "p99": 57.12,
+  "max": 10002.4,
+  "ok200": 222981,
+  "failed": 5,
+  "byStatus": {
+    "0": 5,
+    "200": 222981
+  },
+  "transportErrors": {
+    "timeout": 5
+  },
+  "denied": 0,
+  "firstFailures": [
+    {
+      "atSec": 19.96,
+      "status": 0,
+      "err": "timeout"
+    },
+    {
+      "atSec": 19.96,
+      "status": 0,
+      "err": "timeout"
+    },
+    {
+      "atSec": 19.96,
+      "status": 0,
+      "err": "timeout"
+    },
+    {
+      "atSec": 19.96,
+      "status": 0,
+      "err": "timeout"
+    },
+    {
+      "atSec": 19.97,
+      "status": 0,
+      "err": "timeout"
+    }
+  ]
+}

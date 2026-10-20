@@ -1,0 +1,28 @@
+{
+  "url": "http://127.0.0.1:30080",
+  "requests": 132853,
+  "concurrency": 32,
+  "seconds": 40.13,
+  "rps": 3310,
+  "p50": 7.87,
+  "p95": 16.43,
+  "p99": 58.38,
+  "max": 191.01,
+  "ok200": 132852,
+  "failed": 1,
+  "byStatus": {
+    "0": 1,
+    "200": 132852
+  },
+  "transportErrors": {
+    "ECONNRESET": 1
+  },
+  "denied": 0,
+  "firstFailures": [
+    {
+      "atSec": 10.01,
+      "status": 0,
+      "err": "ECONNRESET"
+    }
+  ]
+}
