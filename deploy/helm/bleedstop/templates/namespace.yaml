@@ -1,0 +1,9 @@
+{{- if .Values.createNamespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels:
+    {{- include "bleedstop.labels" . | nindent 4 }}
+    bleedstop.io/env: {{ .Values.namespace }}
+{{- end }}

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout — Protected SaaS</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --panel: #1a222c;
+        --text: #e8eef4;
+        --muted: #8b9aab;
+        --accent: #3d9cf0;
+        --ok: #3ecf8e;
+        --bad: #f07178;
+        --line: #2a3542;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: radial-gradient(1200px 600px at 10% -10%, #1c2a3a, var(--bg));
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .card {
+        width: min(440px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 28px;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.35rem;
+        font-weight: 650;
+      }
+      .sub {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        margin-bottom: 14px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #12181f;
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+      #payment-element {
+        margin: 8px 0 18px;
+        min-height: 24px;
+      }
+      button {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 0.98rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: #041018;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      #status {
+        margin-top: 14px;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        min-height: 1.4em;
+        color: var(--muted);
+      }
+      #status.ok {
+        color: var(--ok);
+      }
+      #status.bad {
+        color: var(--bad);
+      }
+      .hint {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      code {
+        font-size: 0.78rem;
+        background: #12181f;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Protected checkout</h1>
+      <p class="sub">
+        Click <strong>Pay</strong> → BleedStop checks first → then Stripe.
+        If ceiling is full you still click Pay and see DENY (button stays usable).
+      </p>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" value="buyer@example.com" autocomplete="email" />
+
+      <label for="actorId">Actor ID</label>
+      <input id="actorId" type="text" value="checkout-user-1" />
+
+      <div id="payment-element"></div>
+
+      <button id="pay" type="button">Pay $5.00 (test)</button>
+      <div id="status">Loading Stripe…</div>
+
+      <p class="hint">
+        Test card: <code>4242 4242 4242 4242</code>, any future expiry, any CVC.<br />
+        DENY ke baad: dashboard pe <strong>Clear staging data</strong>, phir yahan dobara Pay dabao.<br />
+        Dashboard: <code>http://localhost:3000/dashboard/</code>
+      </p>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const payBtn = document.getElementById("pay");
+      const mountEl = document.getElementById("payment-element");
+      let stripe;
+      let elements;
+      let clientSecret;
+      let phase = "ask"; // ask = need BleedStop intent | confirm = card ready
+
+      let fingerprint = localStorage.getItem("bs_fp");
+      if (!fingerprint) {
+        fingerprint = "fp-" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem("bs_fp", fingerprint);
+      }
+
+      function setStatus(msg, kind) {
+        statusEl.textContent = msg;
+        statusEl.className = kind || "";
+      }
+
+      async function boot() {
+        try {
+          const cfg = await fetch("/payments/config").then((r) => r.json());
+          if (!cfg.live || !cfg.publishableKey) {
+            setStatus("Stripe keys missing in .env — checkout offline.", "bad");
+            payBtn.disabled = true;
+            return;
+          }
+          stripe = Stripe(cfg.publishableKey);
+          payBtn.disabled = false;
+          setStatus("Ready — click Pay. BleedStop will check when you click.");
+        } catch (err) {
+          setStatus("Boot failed: " + err.message, "bad");
+        }
+      }
+
+      async function askBleedStop() {
+        const res = await fetch("/payments/attempt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: document.getElementById("email").value,
+            actorId: document.getElementById("actorId").value,
+            deviceFingerprint: fingerprint,
+            paid: false,
+            amountCents: 500,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, data };
+      }
+
+      payBtn.addEventListener("click", async () => {
+        if (!stripe) return;
+        payBtn.disabled = true;
+
+        // Step 1: always ask BleedStop when starting (or after DENY retry)
+        if (phase === "ask") {
+          setStatus("Asking BleedStop…");
+          const { ok, data } = await askBleedStop();
+
+          if (!ok) {
+            const reason =
+              data.decision?.reason ||
+              data.error ||
+              "blocked";
+            setStatus("BleedStop DENY: " + reason, "bad");
+            // Button STAYS usable — clear staging, then click again
+            payBtn.disabled = false;
+            payBtn.textContent = "Try Pay $5.00 again";
+            phase = "ask";
+            mountEl.innerHTML = "";
+            elements = null;
+            clientSecret = null;
+            return;
+          }
+
+          clientSecret = data.clientSecret;
+          mountEl.innerHTML = "";
+          elements = stripe.elements({ clientSecret });
+          elements.create("payment").mount("#payment-element");
+          phase = "confirm";
+          payBtn.textContent = "Confirm card — $5.00";
+          payBtn.disabled = false;
+          setStatus(
+            "BleedStop ALLOW (" +
+              (data.bleedstop?.clusterId || "?") +
+              "). Enter test card, then Confirm.",
+            "ok"
+          );
+          return;
+        }
+
+        // Step 2: confirm with Stripe
+        setStatus("Confirming with Stripe…");
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          redirect: "if_required",
+          confirmParams: { return_url: window.location.href },
+        });
+
+        if (error) {
+          setStatus(error.message, "bad");
+          payBtn.disabled = false;
+          return;
+        }
+
+        setStatus(
+          "Payment " +
+            (paymentIntent?.status || "succeeded") +
+            " — protected by BleedStop.",
+          "ok"
+        );
+        payBtn.textContent = "Pay another $5.00";
+        payBtn.disabled = false;
+        phase = "ask";
+        elements = null;
+        clientSecret = null;
+        mountEl.innerHTML = "";
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

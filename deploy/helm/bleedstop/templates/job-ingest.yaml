@@ -1,0 +1,41 @@
+{{- if .Values.ingest.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bleedstop-ingest-{{ .Release.Revision }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "bleedstop.labels" . | nindent 4 }}
+    app: bleedstop-ingest
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: bleedstop-ingest
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+        runAsUser: {{ .Values.podSecurity.runAsUser }}
+      containers:
+        - name: ingest
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["node", "src/workers/ingestOnce.js"]
+          env:
+            - name: BLEEDSTOP_ROLE
+              value: ingest
+            - name: BLEEDSTOP_URL
+              value: "http://bleedstop-api"
+          envFrom:
+            - configMapRef:
+                name: bleedstop-config
+            - secretRef:
+                name: bleedstop-secrets
+          resources:
+            {{- toYaml .Values.ingest.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,57 @@
+# Multi instance stack: 3x API + Redis + Postgres behind nginx (round robin).
+#   docker compose -f docker-compose.stack.yml up -d --build
+#   curl localhost:8080/readyz
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bleedstop
+      POSTGRES_PASSWORD: bleedstop
+      POSTGRES_DB: bleedstop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bleedstop -d bleedstop"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: .
+    image: bleedstop:local
+    deploy:
+      replicas: 3
+    environment:
+      PORT: 3000
+      BLEEDSTOP_ROLE: api
+      DATABASE_URL: ${STACK_DATABASE_URL-postgres://bleedstop:bleedstop@postgres:5432/bleedstop}
+      REDIS_URL: redis://redis:6379
+      TENANT_ID: local-docker
+      RAG_ENABLED: "0"
+      LOG_FORMAT: json
+      DECIDE_RATE_PER_SEC: "0"
+      LLM_VELOCITY_MAX_PER_MIN: ${LLM_VELOCITY_MAX_PER_MIN:-60}
+      SHUTDOWN_DRAIN_MS: "2000"
+      PG_REQUIRED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  lb:
+    image: nginx:alpine
+    volumes:
+      - ./deploy/compose/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api

@@ -1,0 +1,49 @@
+{
+  "name": "bleedstop",
+  "version": "0.5.0",
+  "description": "Abuse cost control plane \u2014 stop bot farms and leaked keys from burning SMS/LLM budgets",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "app": "node apps/protected-saas/server.js",
+    "app:py": "uvicorn main:app --app-dir apps/protected-saas-python --reload --port 5000",
+    "test:py": "python -m pytest apps/protected-saas-python -q",
+    "worker:reconciler:py": "python apps/protected-saas-python/worker/reconciler_worker.py",
+    "my-app": "node apps/my-saas-starter/server.js",
+    "benchmark": "node benchmark/run.js",
+    "db:up": "docker compose up -d postgres redis",
+    "db:down": "docker compose stop postgres redis",
+    "stack:up": "docker compose up --build",
+    "victim": "node apps/protected-saas/server.js",
+    "test:realworld": "node benchmark/run.js",
+    "drill": "node drill/run-drill.js",
+    "test": "node --test \"tests/*.test.js\"",
+    "attack-suite": "node benchmark/attack-suite/run.js",
+    "lint": "node --check src/server.js src/decision.js src/reconciler.js src/auth/apiKeys.js src/auth/dashboardAuth.js src/auditLog.js src/notify/slack.js src/tenant/context.js src/sdk/express.js src/sdk/client.js apps/protected-saas/server.js apps/my-saas-starter/server.js src/policy.js src/network.js src/agentGuard.js src/validate.js src/rateLimit.js src/tracing.js src/velocity.js src/db/redisShared.js",
+    "secrets:check": "node scripts/check-secrets.js",
+    "backup:pg": "node scripts/backup-postgres.js",
+    "load:decide": "node scripts/load-decide.js",
+    "worker:reconciler": "node src/workers/reconcilerWorker.js",
+    "worker:ingest": "node src/workers/ingestWorker.js",
+    "rag:ingest": "node src/workers/ingestWorker.js",
+    "evals": "node evals/run-evals.js --gate",
+    "evals:agent": "node evals/run-agent-evals.js --gate",
+    "bench:scale": "node benchmark/scale/run.js --runs 3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/resources": "^2.12.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
+    "@opentelemetry/sdk-trace-node": "^2.12.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.1",
+    "pg": "^8.14.1",
+    "yaml": "^2.9.1"
+  }
+}

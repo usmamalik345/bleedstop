@@ -1,0 +1,82 @@
+namespace: bleedstop-dev
+
+image:
+  repository: bleedstop
+  tag: local
+  pullPolicy: IfNotPresent
+
+createNamespace: true
+
+api:
+  replicas: 3
+  port: 3000
+  # > SHUTDOWN_DRAIN_MS + in flight + write behind flush
+  terminationGracePeriodSeconds: 30
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+reconciler:
+  enabled: true
+  schedule: "*/2 * * * *" # every 2 minutes
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+ingest:
+  # needs data/kb (RAG knowledge base), which is not in this working copy
+  enabled: false
+  # Job runs on install/upgrade
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+config:
+  unpaidCeilingUsd: "5"
+  ghostThresholdUsd: "1"
+  ragEnabled: "0"
+  # durable mode: exit (and get restarted) instead of silently running without Postgres
+  pgRequired: "1"
+  # readiness goes 503 this long before the server stops accepting, so kube-proxy drops the pod
+  shutdownDrainMs: "5000"
+  decideRatePerSec: "0"
+  tenantId: "k8s-dev"
+  reconcileIntervalMs: "30000"
+
+# For kind local images loaded with `kind load docker-image`
+postgres:
+  enabled: true
+  user: bleedstop
+  password: bleedstop
+  database: bleedstop
+
+redis:
+  enabled: true
+
+service:
+  type: NodePort
+  nodePort: 30080
+
+pdb:
+  enabled: true
+  minAvailable: 2
+
+hpa:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+networkPolicy:
+  enabled: true
+
+podSecurity:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: false

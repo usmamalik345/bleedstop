@@ -1,0 +1,4 @@
+# ADR-0004: Redis Lua check-and-charge and a shared identity graph
+**Context.** Legacy multi-instance mode synced spend from Redis then charged locally, and named clusters with a per-process counter (`C-1`, `C-2`). Measured with 2 instances behind a round-robin LB: up to $0.13 overspend on a $5 ceiling and 200 unrelated actors collapsed into 100 cluster ids (unrelated users sharing budgets).
+**Decision.** In Redis mode (`REDIS_ATOMIC` default on): signal owners via `SET NX`, Union Find parents in a Redis hash with "oldest root wins", cluster id = sha1(root); ceiling enforced by one Lua script (read, compare, INCRBY) in integer micro-dollars; LLM velocity as a Redis fixed-window counter.
+**Consequences.** 0 overspend and 200/200 distinct ids in all runs at 1, 2 and 3 instances. About 3 Redis round trips added per decision. Velocity is a fixed 60 s window in Redis mode (rolling in memory mode). Subnet/ASN/agent-session state is still per process.

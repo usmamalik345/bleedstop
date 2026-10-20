@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - name: Syntax check
+        run: npm run lint
+      - name: Validate example policy
+        run: POLICY_FILE=config/policy.example.yaml node -e "import('./src/policy.js').then(m=>console.log(m.describePolicy()))"
+      - name: Unit tests
+        run: npm test
+
+  python-sdk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bleedstop-py
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: mypy
+      - run: pytest -q
+
+  evals:
+    # Golden-set evals + agent guard evals are merge gates
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+      - run: npm ci
+      - name: Traffic golden set (precision/recall/FP gate)
+        run: node evals/run-evals.js --label ci --out eval-results.json --md EVAL-REPORT.md --gate
+      - name: Agent guard evals (dev + held-out gate)
+        run: node evals/run-agent-evals.js --out agent-evals.json --md AGENT-EVAL-REPORT.md --gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-reports
+          path: |
+            eval-results.json
+            EVAL-REPORT.md
+            agent-evals.json
+            AGENT-EVAL-REPORT.md
+
+  attack-suite:
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      DATABASE_URL: ""
+      REDIS_URL: ""
+      RAG_ENABLED: "0"
+      DECIDE_RATE_PER_SEC: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+      - run: npm ci
+      - name: Start BleedStop
+        run: |
+          nohup node src/server.js > bleedstop.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3000/api/health && break; sleep 1; done
+      - name: Drill
+        run: npm run drill
+      - name: Portfolio benchmark (sample app)
+        run: |
+          nohup node apps/protected-saas/server.js > app.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:4000/health && break; sleep 1; done
+          npm run benchmark
+      - name: Attack suite (1 run)
+        run: node benchmark/attack-suite/run.js --runs 1 --out attack-results.json --label ci
+      - name: Gate on results
+        run: |
+          node -e '
+          const m = require("./attack-results.json").median.scenarios;
+          const fail = [];
+          if (m.normal_baseline.blockedPct > 1) fail.push("false positives > 1%");
+          if (m.token_flood_400k_char_prompts.blockedPct < 99) fail.push("token flood not blocked");
+          if (m.free_tier_farm_shared_device.blockedPct < 90) fail.push("shared-device farm < 90% blocked");
+          if (fail.length) { console.error(fail.join("; ")); process.exit(1); }
+          console.log("attack-suite gates passed");'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: attack-results
+          path: |
+            attack-results.json
+            bleedstop.log
+
+  scale:
+    # Multi-instance Redis correctness: no overspend, stable cluster ids
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+      - run: npm ci
+      - name: Install redis-server binary (benchmark manages its own instances)
+        run: sudo apt-get update && sudo apt-get install -y redis-server && sudo systemctl stop redis-server || true
+      - name: Scale benchmark (1 run, small)
+        run: node benchmark/scale/run.js --runs 1 --n 5000 --out scale.json
+      - name: Gate
+        run: |
+          node -e '
+          const m = require("./scale.json").median;
+          const bad = Object.entries(m).filter(([k,v]) => !k.includes("LEGACY") && (v.correctness.overspendUsdMax > 0 || v.correctness.unrelatedDistinctClusterIdsMin < 200));
+          if (bad.length) { console.error("scale gate failed", bad.map(b=>b[0])); process.exit(1); }
+          console.log("scale gates passed");'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scale
+          path: scale.json

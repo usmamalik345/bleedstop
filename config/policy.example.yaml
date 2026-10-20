@@ -1,0 +1,25 @@
+# BleedStop tenant policy. Load with POLICY_FILE=config/policy.example.yaml
+# Every key is validated at boot (type + range); unknown keys or bad values stop startup.
+defaults:
+  unpaidCeilingUsd: 5          # per identity cluster, unpaid
+  paidCeilingUsd: 50
+  llmUsdPer1kTokens: 0.01      # token-aware cost when the app sends estimatedTokens
+  llmMaxTokensUnpaid: 32000    # token flooding cap per request
+  llmVelocityMaxPerMin: 60     # per cluster, retry/loop storms
+  subnetPoolMinActors: 10      # /24 or /64 becomes a shared pool after N unpaid actors
+  subnetPoolCeilingUsd: 5      # pool floor
+  subnetPoolPerActorUsd: 0.1   # pool grows with distinct actors (big NATs stay usable)
+  asnSpreadMaxSubnets: 20
+  asnSpreadMode: shadow        # off | shadow | enforce  (enforce hurts big consumer ISPs, see evals)
+  agentGuardMode: enforce
+  agentMaxToolCallsPerMin: 30
+  agentMaxDepth: 5
+  decideRatePerSec: 2000       # rate limit on /decide itself, per tenant+caller, per process
+  decideBurst: 4000
+tenants:
+  tenant-acme:
+    unpaidCeilingUsd: 20
+    llmMaxTokensUnpaid: 64000
+  tenant-strict:
+    unpaidCeilingUsd: 1
+    asnSpreadMode: enforce

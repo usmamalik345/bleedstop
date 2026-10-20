@@ -1,0 +1,3 @@
+# ADR-0005: OpenTelemetry tracing next to Prometheus
+**Decision.** Spans `bleedstop.decide` > `bleedstop.cluster.resolve`, `bleedstop.rules.evaluate`, `bleedstop.ledger.charge` with tenant, action, decision, cluster, cost, rule ids, shadow rule ids, replay and agent verdict attributes. The SDK + OTLP/HTTP exporter start only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; otherwise the API is a no-op. Prometheus `/metrics` is kept.
+**Consequences.** With export on (BatchSpanProcessor, local sink), single-instance throughput dropped from 3,786 to 2,519 req/s and p99 rose from 34 to 52 ms in the scale benchmark. Use sampling in production (`OTEL_TRACES_SAMPLER=parentbased_traceidratio`).

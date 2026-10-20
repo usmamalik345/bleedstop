@@ -1,0 +1,56 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bleedstop-postgres
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: bleedstop-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bleedstop-postgres
+  template:
+    metadata:
+      labels:
+        app: bleedstop-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bleedstop-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database | quote }}
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.postgres.user | quote }}, "-d", {{ .Values.postgres.database | quote }}]
+            periodSeconds: 3
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bleedstop-postgres
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: bleedstop-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+{{- end }}

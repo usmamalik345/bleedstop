@@ -1,0 +1,46 @@
+{{- if .Values.reconciler.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bleedstop-reconciler
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "bleedstop.labels" . | nindent 4 }}
+    app: bleedstop-reconciler
+spec:
+  schedule: {{ .Values.reconciler.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels:
+            app: bleedstop-reconciler
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+            runAsUser: {{ .Values.podSecurity.runAsUser }}
+          containers:
+            - name: reconciler
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["node", "src/workers/reconcileOnce.js"]
+              env:
+                - name: BLEEDSTOP_ROLE
+                  value: reconciler
+                - name: BLEEDSTOP_URL
+                  value: "http://bleedstop-api"
+              envFrom:
+                - configMapRef:
+                    name: bleedstop-config
+                - secretRef:
+                    name: bleedstop-secrets
+              resources:
+                {{- toYaml .Values.reconciler.resources | nindent 16 }}
+{{- end }}
+

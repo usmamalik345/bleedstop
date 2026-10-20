@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bleedstop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-bleedstop}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bleedstop} -d ${POSTGRES_DB:-bleedstop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+  bleedstop:
+    build:
+      context: ../..
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      BLEEDSTOP_ROLE: api
+      DATABASE_URL: postgres://${POSTGRES_USER:-bleedstop}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bleedstop}
+      REDIS_URL: redis://redis:6379
+      TENANT_ID: ${TENANT_ID:-prod}
+      DASHBOARD_USERS: ${DASHBOARD_USERS:?set DASHBOARD_USERS}
+      DASHBOARD_SESSION_SECRET: ${DASHBOARD_SESSION_SECRET:?set DASHBOARD_SESSION_SECRET}
+      BLEEDSTOP_API_KEYS: ${BLEEDSTOP_API_KEYS:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - bleedstop
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:

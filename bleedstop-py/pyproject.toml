@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bleedstop-py"
+version = "0.1.0"
+description = "Async Python client + FastAPI integration for the BleedStop cost-abuse control plane"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["httpx>=0.27", "pydantic>=2.6"]
+
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.110"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "respx>=0.21", "fastapi>=0.110", "uvicorn>=0.29", "mypy>=1.10"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bleedstop = ["py.typed"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+packages = ["bleedstop"]
+mypy_path = "src"

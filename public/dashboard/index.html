@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BleedStop Control Plane</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section id="login-screen" class="login-screen hidden">
+      <form id="login-form" class="login-card">
+        <p class="eyebrow">BleedStop</p>
+        <h1>Admin login</h1>
+        <p class="sub">
+          Login first, then you can view the operator dashboard and run protected actions.
+        </p>
+        <p id="login-status" class="status" aria-live="polite">Enter dashboard credentials.</p>
+        <input id="login-user" type="text" placeholder="username" autocomplete="username" />
+        <input id="login-pass" type="password" placeholder="password" autocomplete="current-password" />
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <main id="dashboard-app" class="hidden">
+    <header>
+      <div>
+        <p class="eyebrow">BleedStop</p>
+        <h1>Abuse cost control plane</h1>
+        <p class="sub">
+          Deterministic allow/deny for paid actions. Ghost-spend kill switch. Operator view for portfolio / staging.
+        </p>
+      </div>
+      <div class="actions">
+        <span id="auth-state" class="auth-pill">Auth checking…</span>
+        <button id="btn-logout" type="button" class="secondary">Logout</button>
+        <label class="api-key-field">
+          <span>API key</span>
+          <input id="api-key" type="password" placeholder="optional X-API-Key" autocomplete="off" />
+        </label>
+        <button id="btn-refresh">Refresh</button>
+        <button id="btn-redteam" class="secondary">Run leaked-key red team</button>
+        <button id="btn-reconcile" class="secondary">Reconcile vendor bills</button>
+        <button id="btn-drill" class="secondary">Run PDF drill</button>
+        <button id="btn-billshock" class="secondary">Bill-shock audit</button>
+        <button id="btn-reset" class="danger">Clear staging data</button>
+      </div>
+    </header>
+
+    <p id="status" class="status" aria-live="polite">Loading…</p>
+    <section class="cards" id="stats"></section>
+
+    <section class="charts" aria-label="Operator charts">
+      <article class="chart-panel">
+        <h2>Cluster spend (top)</h2>
+        <div id="chart-clusters" class="bars"></div>
+      </article>
+      <article class="chart-panel">
+        <h2>Recent decisions</h2>
+        <div id="chart-decisions" class="bars"></div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article>
+        <h2>Morning report</h2>
+        <pre id="morning"></pre>
+      </article>
+      <article>
+        <h2>Investigator</h2>
+        <pre id="investigate"></pre>
+      </article>
+      <article>
+        <h2>Ledger</h2>
+        <pre id="ledger"></pre>
+      </article>
+      <article>
+        <h2>Incidents</h2>
+        <pre id="incidents"></pre>
+      </article>
+      <article>
+        <h2>Rules (shadow ↔ enforce)</h2>
+        <div id="rules-controls" class="rules-controls"></div>
+        <pre id="rules"></pre>
+      </article>
+      <article>
+        <h2>Audit log (who changed what)</h2>
+        <pre id="audits"></pre>
+      </article>
+      <article>
+        <h2>Recent decisions</h2>
+        <pre id="events"></pre>
+      </article>
+    </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

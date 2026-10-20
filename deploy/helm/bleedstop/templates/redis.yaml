@@ -1,0 +1,41 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bleedstop-redis
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: bleedstop-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bleedstop-redis
+  template:
+    metadata:
+      labels:
+        app: bleedstop-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["--save", "", "--appendonly", "no"]
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bleedstop-redis
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: bleedstop-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+{{- end }}
