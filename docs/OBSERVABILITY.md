@@ -5,3 +5,19 @@
 * **Logs** `LOG_FORMAT=json`: one line per decision (ts, level, instance, tenant, decision, action, cluster, cost, rule ids, replay, latency).
 * **Audit** every rule mode change, runbook action and admin/operator HTTP mutation (`GET /audits`).
 * **Cost of tracing** (scale benchmark, 1 instance): 3,786 → 2,519 req/s, p99 34 → 52 ms with export on. Sample in production.
+
+## Grafana Cloud
+
+Grafana's public pricing page says the free tier does not require a credit card (checked 2026-10-20, https://grafana.com/pricing/). This repo does not create that account. If the signup form asks for a card, stop and do not enter one.
+
+Traces leave this process only when you set:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-<region>.grafana.net/otlp
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic <base64 of instanceId:token>
+```
+
+The process posts to `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`. It does not print the header.
+
+Metrics stay on `GET /metrics`. A free local Grafana still scrapes that (see `deploy/observability`). Pushing those metrics to Grafana Cloud needs their Alloy or Agent binary and a remote_write URL from the account you created. This repo does not ship a paid collector.
+

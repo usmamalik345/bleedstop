@@ -23,6 +23,10 @@ let deniedUsdTotal = 0;
 
 let decideLatencyMsSum = 0;
 let decideLatencyMsCount = 0;
+/** Last hour of decisions in this process. The demo panel reads this. */
+const recent = [];
+const HOUR_MS = 60 * 60 * 1000;
+const MAX_RECENT = 20000;
 
 export function incDecide(decision, { replay = false, latencyMs = 0, deniedUsd = 0 } = {}) {
   if (deniedUsd > 0) deniedUsdTotal += deniedUsd;
@@ -33,6 +37,9 @@ export function incDecide(decision, { replay = false, latencyMs = 0, deniedUsd =
   // Count every decision (Date.now() resolution often gives 0 ms)
   decideLatencyMsSum += latencyMs;
   decideLatencyMsCount += 1;
+  recent.push({ t: Date.now(), decision: String(decision || "").toUpperCase(), ms: Number(latencyMs) || 0 });
+  const cut = Date.now() - HOUR_MS;
+  while (recent.length && (recent[0].t < cut || recent.length > MAX_RECENT)) recent.shift();
 }
 
 export function incReconcile({ ghosts = 0 } = {}) {
@@ -112,4 +119,26 @@ export function resetMetrics() {
   decideLatencyMsCount = 0;
   bucketCounts.fill(0);
   deniedUsdTotal = 0;
+  recent.length = 0;
+}
+
+/** Decisions this process handled in the last hour. Not a global total. */
+export function publicWindow() {
+  const cut = Date.now() - HOUR_MS;
+  const rows = recent.filter((r) => r.t >= cut);
+  const decisions = { ALLOW: 0, LIMIT: 0, DENY: 0, CHALLENGE: 0 };
+  const lats = [];
+  for (const r of rows) {
+    if (decisions[r.decision] != null) decisions[r.decision] += 1;
+    lats.push(r.ms);
+  }
+  lats.sort((a, b) => a - b);
+  const p50 = lats.length ? lats[Math.min(lats.length - 1, Math.max(0, Math.ceil(0.5 * lats.length) - 1))] : null;
+  return {
+    window: "1h",
+    n: rows.length,
+    decisions,
+    p50LatencyMs: p50 == null ? null : Math.round(p50 * 1000) / 1000,
+    instance: String(process.pid),
+  };
 }

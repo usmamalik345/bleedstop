@@ -65,7 +65,7 @@ import {
 } from "./auth/dashboardAuth.js";
 import { getTenantId } from "./tenant/context.js";
 import { slackEnabled } from "./notify/slack.js";
-import { renderPrometheus, snapshot as metricsSnapshot } from "./metrics.js";
+import { renderPrometheus, snapshot as metricsSnapshot, publicWindow } from "./metrics.js";
 import { pdfCoverage } from "./pdfCoverage.js";
 import { billShockAudit } from "./audit/billShock.js";
 import { runDrill } from "./drill/scenarios.js";
@@ -232,6 +232,10 @@ app.get("/audits/verify", (_req, res) => {
   res.json(verifyAuditChain());
 });
 
+app.get("/api/public-stats", (_req, res) => {
+  res.json(publicWindow());
+});
+
 /** Chart-friendly aggregates for the operator dashboard */
 app.get("/api/stats", (_req, res) => {
   const spendByCluster = listSpend();
@@ -295,6 +299,8 @@ app.post("/decide", async (req, res) => {
           "bleedstop.shadow_rule_ids": (r.shadowHits || []).map((m) => m.ruleId).join(","),
           "bleedstop.replay": Boolean(r.replay),
           "bleedstop.agent_verdict": r.agentCheck?.verdict || "none",
+          "bleedstop.detector": r.detector || (r.agentCheck ? "regex" : "rules"),
+          "bleedstop.latency_ms": Math.round((performance.now() - t0) * 1000) / 1000,
         });
         return r;
       }

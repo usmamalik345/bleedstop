@@ -136,6 +136,10 @@ pre{margin:0;background:#0d1218;border:1px solid var(--line);border-radius:10px;
       <div class="ctr"><div class="n" id="cS">$0.00</div><div class="l">Spend held back</div></div>
     </div>
 
+    <section class="card"><h2>This instance, last hour</h2>
+      <p class="prog" id="publine">Loading this server instance's own counters.</p>
+    </section>
+
     <section class="card"><h2>Last decision</h2>
       <div class="result" id="res"><div class="empty">Pick a scenario to send a real request.</div></div>
     </section>
@@ -155,6 +159,20 @@ pre{margin:0;background:#0d1218;border:1px solid var(--line);border-radius:10px;
 const KEY = "demo-public-key";
 const ORIGIN = location.origin;
 const $ = (id) => document.getElementById(id);
+async function loadPublicStats() {
+  try {
+    const r = await fetch(ORIGIN + "/api/public-stats");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const d = j.decisions || {};
+    const p50 = j.p50LatencyMs == null ? "n/a" : j.p50LatencyMs + " ms";
+    $("publine").textContent = "ALLOW " + (d.ALLOW || 0) + ", LIMIT " + (d.LIMIT || 0) + ", DENY " + (d.DENY || 0) + ", CHALLENGE " + (d.CHALLENGE || 0) + " out of " + j.n + ". p50 " + p50 + ". One process only (pid " + j.instance + "), not every visitor.";
+  } catch (e) {
+    $("publine").textContent = "Public stats are not available from this page.";
+  }
+}
+loadPublicStats();
+setInterval(loadPublicStats, 15000);
 const rid = () => Math.random().toString(36).slice(2, 10);
 let S, counts;
 function newSession() {
