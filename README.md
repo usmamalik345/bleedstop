@@ -56,6 +56,21 @@ Your SaaS  --SDK/middleware-->  BleedStop /decide  --> ALLOW | LIMIT | DENY
                          investigator + rule proposals (off hot path)
 ```
 
+```mermaid
+flowchart LR
+  app[App] --> decide["POST /decide"]
+  decide --> det[Detector]
+  det --> regex[Phrase list]
+  det --> clf["Classifier HTTP optional"]
+  clf --> side["services/classifier ONNX"]
+  decide --> budget[Budget]
+  budget --> mem[Memory default]
+  budget --> pg["Postgres when BUDGET_STORE=postgres"]
+  decide --> met["GET /metrics and OTel traces"]
+```
+
+The phrase list is the default detector. The ONNX sidecar runs only when `BLEEDSTOP_DETECTOR` is `classifier` or `both`. The check in the browser on the demo page is a demo only. It does not protect the API.
+
 ## Quick start (portfolio benchmark)
 
 ```bash
@@ -264,6 +279,45 @@ Screenshots are in the Observability section below.
 ![Prometheus alert rules](docs/img/prometheus-alerts.png)
 
 *Prometheus alert rules from the same local stack, with four of six firing during the mock upstream traffic run.*
+
+## Results
+
+Each file below was written by a script in this repo. Open the file for N, p50, p95, the machine, and the command.
+
+| Report | What it measured |
+|---|---|
+| [results/LOADTEST-REPORT.md](results/LOADTEST-REPORT.md) | Added latency of BleedStop versus a local mock upstream on the same machine (`npm run loadtest`) |
+| [results/INJECTION-EVAL.md](results/INJECTION-EVAL.md) | Phrase-list recall and false positive rate on dev, held-out, and deepset (`npm run eval:injection`) |
+| [results/CLASSIFIER-REPORT.md](results/CLASSIFIER-REPORT.md) | Earlier torch classifier run. The injection eval above did not rerun the sidecar |
+| [results/BROWSER-CLASSIFIER-REPORT.md](results/BROWSER-CLASSIFIER-REPORT.md) | In-browser demo model. Not the server check |
+
+On 2026-10-20 the load test (`results/LOADTEST-REPORT.md`, Windows, 11th Gen Intel Core i7-1185G7, 8 threads) recorded this added latency (BleedStop sample percentile minus the mock sample percentile):
+
+| Scenario | N | added p50 ms | added p95 ms | added p99 ms | correct |
+|---|---:|---:|---:|---:|---|
+| normal_users | 25455 | 2.722 | 4.131 | 6.719 | 25455/25455 |
+| leaked_key_flood | 17900 | 5.479 | 6.958 | 9.6 | 17900/17900 |
+| retry_storm | 28993 | 2.622 | 2.97 | 3.7 | 28993/28993 |
+| token_flood | 26879 | 2.269 | 3.414 | 5.183 | 26879/26879 |
+
+A call that also waits on a real model provider is dominated by that provider. The table above removes the provider. It is the overhead of BleedStop on this machine only.
+
+The same injection script, phrase list only, cutoff 0.6, normaliser off: dev recall 53/55 (N=112, benign 57, FPR 0/57), held-out 9/40 (N=80, FPR 0/40), deepset test 1/60 (N=116, FPR 0/56), deepset train 10/203 (N=546, FPR 0/343). Lowering the cutoff to 0.3 did not raise dev recall and raised dev FPR to 1/57, so the cutoff stayed 0.6. Normalising did not raise dev recall. The classifier sidecar was not running, so this script did not measure it.
+
+There is no `results/MULTI-INSTANCE-REPORT.md`. `deploy/k8s/race.js` writes it. Docker is not installed on the machine that prepared this README, so the race was not run and no spend number is filled in. The GitHub Actions job `kind-race` is the run that can produce it.
+
+## Limits
+
+- The server classifier is off unless `BLEEDSTOP_DETECTOR` is set. This README's injection table is the phrase list.
+- The browser classifier on the demo does not enforce anything on the server.
+- `BLEEDSTOP_NORMALIZE` is off. On the dev set it did not raise recall.
+- Postgres budget locking and the 3-replica race were not measured here. Memory is still the default store.
+- The identity graph in `src/cluster.js` is shared inside one process. Budgets and idempotency keys are per tenant. Two tenants do not share dollars. They can still share a cluster id in that process.
+- Admin login can use a generic OIDC issuer (`OIDC_ISSUER`). This is not SAML. The Keycloak compose file was not started here.
+- Grafana Cloud is documented as env vars only in `docs/OBSERVABILITY.md`. No account was created. Metrics stay on `GET /metrics`. Traces are sent only if `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+- The public stats panel on the demo (`GET /api/public-stats`) counts one process for the last hour. It is not a count of every visitor.
+- The live demo on Vercel Hobby keeps state in memory for that instance. A cold start or another instance does not share the budget.
+- End-to-end latency with a real provider is mostly the provider. Use the load-test table for BleedStop's added time.
 
 ## Honest scope
 
