@@ -21,7 +21,9 @@ const port = 3850 + Math.floor(Math.random() * 90);
 const srv = spawn(process.execPath, ["src/server.js"], { stdio: "ignore", env: { ...process.env, npm_lifecycle_event: "test", PORT: String(port), OPENAI_PROXY_UPSTREAM: UP, OPENAI_API_KEY: KEY, OPENAI_PROXY_SMALL_MODEL: MODEL, OPENAI_PROXY_MAX_OUTPUT_TOKENS: String(CAP), BLEEDSTOP_API_KEYS: "", RAG_ENABLED: "false", TENANT_ID: "local-dev", LLM_VELOCITY_MAX_PER_MIN: "100000" } });
 const BS = `http://127.0.0.1:${port}/v1`;
 for (let i = 0; i < 100; i++) { try { if ((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) break; } catch {} await new Promise((r) => setTimeout(r, 150)); }
-const call = async (base, body, direct) => { const t = performance.now(); const r = await fetch(`${base}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", ...(direct ? { Authorization: `Bearer ${KEY}` } : { "x-actor-id": "real-" + Math.random() }) }, body: JSON.stringify(body) }); const text = await r.text(); return { ms: performance.now() - t, status: r.status, text }; };
+const call = async (base, body, direct, tries = 0) => { const t = performance.now(); const r = await fetch(`${base}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", ...(direct ? { Authorization: `Bearer ${KEY}` } : { "x-actor-id": "real-" + Math.random() }) }, body: JSON.stringify(body) }); const text = await r.text();
+  if (r.status === 429 && tries < 3) { await new Promise((z) => setTimeout(z, 20000 * (tries + 1))); return call(base, body, direct, tries + 1); } // gentle retry on free tier rate limit
+  return { ms: performance.now() - t, status: r.status, text, retries: tries }; };
 const small = { model: MODEL, max_tokens: 16, temperature: 0, messages: [{ role: "user", content: "Reply with the single word: ok" }] };
 const d = [], p = [], errs = [];
 for (let i = 0; i < N; i++) {
@@ -31,6 +33,7 @@ for (let i = 0; i < N; i++) {
   await new Promise((r) => setTimeout(r, 1200)); // stay under free tier rate limits
 }
 const parse = (t) => t.split("\n\n").map((x) => x.replace(/^data: ?/, "").trim()).filter((x) => x && x !== "[DONE]").map((x) => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
+await new Promise((r) => setTimeout(r, Number(process.env.REAL_PAUSE_MS || 65000))); // let the per minute token window reset
 const longReq = { model: MODEL, stream: true, max_tokens: 4000, stream_options: { include_usage: true }, messages: [{ role: "user", content: "Write a detailed 1500 word essay about the history of the printing press." }] };
 const dr = await call(UP, longReq, true); const de = parse(dr.text);
 const directUsage = de.find((e) => e.usage)?.usage || de.find((e) => e.x_groq?.usage)?.x_groq?.usage || null;

@@ -1,0 +1,82 @@
+{
+  "suite": "openai-proxy-real-upstream-v1",
+  "ranAt": "2026-10-20T14:31:51.624Z",
+  "upstream": "https://api.groq.com/openai/v1",
+  "model": "openai/gpt-oss-20b",
+  "node": "v20.19.2",
+  "latency": {
+    "n": 20,
+    "ok": {
+      "direct": 20,
+      "proxy": 20
+    },
+    "errors": [],
+    "directMs": {
+      "p50": 245.8,
+      "p99": 447.9
+    },
+    "viaProxyMs": {
+      "p50": 234.2,
+      "p99": 399.2
+    },
+    "addedMsP50": -11.6
+  },
+  "streamCap": {
+    "request": "1500 word essay, max_tokens 4000, stream",
+    "proxyCap": 64,
+    "directStatus": 200,
+    "directUsage": {
+      "queue_time": 0.288600557,
+      "prompt_tokens": 87,
+      "prompt_time": 0.005753499,
+      "completion_tokens": 2618,
+      "completion_time": 3.123270345,
+      "total_tokens": 2705,
+      "total_time": 3.1290238439999998,
+      "completion_tokens_details": {
+        "reasoning_tokens": 440
+      }
+    },
+    "viaProxy": [
+      {
+        "status": 200,
+        "ms": 396,
+        "finish": null,
+        "usage": {
+          "prompt_tokens": 87,
+          "completion_tokens": 64,
+          "total_tokens": 151
+        },
+        "cutByProxy": false,
+        "outputCap": 64,
+        "reconciledUsd": 0.00151
+      },
+      {
+        "status": 200,
+        "ms": 208,
+        "finish": null,
+        "usage": {
+          "prompt_tokens": 87,
+          "completion_tokens": 64,
+          "total_tokens": 151
+        },
+        "cutByProxy": false,
+        "outputCap": 64,
+        "reconciledUsd": 0.00151
+      },
+      {
+        "status": 200,
+        "ms": 393,
+        "finish": null,
+        "usage": {
+          "prompt_tokens": 87,
+          "completion_tokens": 64,
+          "total_tokens": 151
+        },
+        "cutByProxy": false,
+        "outputCap": 64,
+        "reconciledUsd": 0.00151
+      }
+    ]
+  }
+}
