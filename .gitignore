@@ -30,3 +30,5 @@ secrets/
 *.pfx
 id_rsa*
 
+.vercel
+.env*

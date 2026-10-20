@@ -5,6 +5,16 @@
 [![CI](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml)
 **Project site:** https://usmamalik345.github.io/bleedstop/ · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
 
+### Live demo API
+**https://bleedstop-demo.vercel.app** ([health](https://bleedstop-demo.vercel.app/api/health)) with a public, demo only key `demo-public-key` (tenant `demo`, in memory, no real providers).
+```bash
+curl -s -X POST https://bleedstop-demo.vercel.app/decide \
+  -H "Content-Type: application/json" -H "X-API-Key: demo-public-key" \
+  -d '{"actorId":"demo-user-1","action":"llm.call","paid":false,"estimatedTokens":500,"signals":{"deviceFingerprint":"fp-demo-1"}}'
+# => "decision":"ALLOW"   (set "estimatedTokens":400000 => "decision":"DENY", unpaid token cap 32000)
+```
+> **Serverless caveat (honest):** the demo runs on Vercel Hobby functions with in memory state and no Redis/Postgres. State lives per function instance, so budgets, velocity windows and rate limits can reset on cold starts or when requests hit different instances; the $5 cluster ceiling is not reliably enforced across calls here. The measured numbers above come from the Docker Compose / Kubernetes stack with Redis, not from this demo. Admin and operator endpoints require dashboard login.
+
 ### Measured, not estimated (raw JSON in [`results/`](results/))
 | What | Result |
 |---|---|

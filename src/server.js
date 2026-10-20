@@ -628,5 +628,12 @@ async function boot() {
   process.on("SIGTERM", shutdown);
 }
 
-boot();
+// On Vercel the platform owns the HTTP server: export the app and skip listen().
+if (process.env.VERCEL) {
+  bootDone = true;
+} else {
+  boot();
+}
+
+export { app };
 
