@@ -22,6 +22,7 @@
  */
 import { precheckAgentCall } from "./agentGuard.js";
 import { classify, classifierFailMode, precheckTwoStage } from "./classifierClient.js";
+import { prepareAgentInput } from "./textNorm.js";
 
 export function detectorMode() {
   const m = String(process.env.BLEEDSTOP_DETECTOR || "").trim().toLowerCase();
@@ -58,11 +59,12 @@ async function classifierOnly(input) {
 
 /** Run the detector selected by BLEEDSTOP_DETECTOR. Extra fields do not change the verdict words. */
 export async function detect(input, policy) {
+  const ready = prepareAgentInput(input);
   const mode = detectorMode();
   if (mode === "regex") {
-    return { ...precheckAgentCall(input, policy), detector: "regex" };
+    return { ...precheckAgentCall(ready, policy), detector: "regex" };
   }
-  if (mode === "classifier") return classifierOnly(input);
-  const r = await precheckTwoStage(input, policy);
+  if (mode === "classifier") return classifierOnly(ready);
+  const r = await precheckTwoStage(ready, policy);
   return { ...r, detector: r.firedStage || "regex" };
 }

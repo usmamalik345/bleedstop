@@ -47,6 +47,7 @@ import { setLocalSpend } from "./ledger.js";
 import { observeNetwork, addPoolSpend, WINDOW_MS as NETWORK_WINDOW_MS } from "./network.js";
 import { precheckAgentCall } from "./agentGuard.js";
 import { detect } from "./detectors.js";
+import { prepareAgentInput } from "./textNorm.js";
 import { getPolicy } from "./policy.js";
 import { withSpan } from "./tracing.js";
 import { atomicPgSpend, pgBudgetEnabled } from "./db/pgBudget.js";
@@ -105,7 +106,7 @@ async function decideInner(input) {
   const agentCheck = input.agent
     ? (process.env.BLEEDSTOP_DETECTOR
       ? await detect(input.agent, getPolicy())
-      : precheckAgentCall(input.agent, getPolicy()))
+      : precheckAgentCall(prepareAgentInput(input.agent), getPolicy()))
     : null;
 
   if (action === "sms.send" && isOtpFrozen(clusterId)) {
