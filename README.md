@@ -247,7 +247,17 @@ Pricing in the flood uses the policy rate of $0.01 per 1k tokens with tokens app
 
 Spans follow the OTel GenAI semantic conventions: `chat {model}` with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens/output_tokens`, and `execute_tool {name}` with `gen_ai.tool.name`. `deploy/observability/` holds a Docker Compose stack (OTel Collector with span metrics, Tempo, Prometheus with 6 alert rules, Grafana with a provisioned dashboard). Run `npm run obs:up`, start BleedStop with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`, then `npm run obs:traffic`.
 
-![Grafana dashboard with real local traffic](docs/img/grafana-dashboard.png)
+Screenshots are in the Observability section below.
+
+## Observability
+
+![Grafana dashboard](docs/img/grafana-dashboard.png)
+
+*Grafana dashboard from the local stack in deploy/observability, fed by real local traffic against the mock OpenAI upstream and the demo MCP servers.*
+
+![Prometheus alert rules](docs/img/prometheus-alerts.png)
+
+*Prometheus alert rules from the same local stack, with four of six firing during the mock upstream traffic run.*
 
 ## Honest scope
 
