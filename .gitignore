@@ -13,7 +13,8 @@ backups/
 # enterprise hardening
 .env*
 !.env.example
-data/
+data/*
+!data/kb/
 backups/
 *.pdf
 .venv/

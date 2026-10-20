@@ -1,0 +1,50 @@
+[
+  {
+    "id": "OAT-019",
+    "title": "Account Creation (OWASP Automated Threats)",
+    "body": "Attackers create many accounts to farm free trials, free AI credits, or abuse signup bonuses. Countermeasures: device fingerprinting, email normalization, phone verification limits, unpaid cluster spend ceilings, CAPTCHA on signup bursts.",
+    "trust_level": "standards"
+  },
+  {
+    "id": "OAT-008",
+    "title": "Credential Stuffing",
+    "body": "Bots try leaked username/password pairs. Countermeasures: rate limits, bot detection, MFA, anomaly velocity on login.",
+    "trust_level": "standards"
+  },
+  {
+    "id": "OAT-001",
+    "title": "Carding",
+    "body": "Attackers test stolen cards with small payment attempts. Countermeasures: Stripe Radar, velocity limits, challenge on unpaid clusters, 3DS.",
+    "trust_level": "standards"
+  },
+  {
+    "id": "OAT-011",
+    "title": "Scraping",
+    "body": "Automated harvesting of content or APIs. Can also drive LLM costs if endpoints call models. Countermeasures: auth, rate limits, bot scores, cost ceilings per cluster.",
+    "trust_level": "standards"
+  },
+  {
+    "id": "SMS-PUMP",
+    "title": "SMS pumping / toll fraud",
+    "body": "Bots request OTPs to premium-rate numbers so the app pays high SMS fees. Countermeasures: country allowlists, OTP velocity caps, phone-country vs IP-country checks, unpaid SMS ceilings, Twilio Fraud Guard.",
+    "trust_level": "vendor_docs"
+  },
+  {
+    "id": "DOW-LLM",
+    "title": "Denial of Wallet on LLM APIs",
+    "body": "Attackers or leaked keys burn LLM budget with max-token prompts and loops. Countermeasures: reserve/commit budgets, per-cluster ceilings, ghost-spend reconciliation against provider usage APIs, never expose unrestricted browser keys.",
+    "trust_level": "playbook"
+  },
+  {
+    "id": "GHOST-KEY",
+    "title": "Leaked API key ghost spend",
+    "body": "Spend appears on OpenAI/Gemini/Twilio bills without passing through the app. Detect by comparing app key ledger to vendor usage. Kill switch: disable/rotate key, freeze OTP, alert founder.",
+    "trust_level": "playbook"
+  },
+  {
+    "id": "VIBE-RLS",
+    "title": "Vibe-coded secret and RLS mistakes",
+    "body": "AI builders may put API keys in client bundles or disable RLS. Countermeasures: server-side wrappers, secret scanning, wiring agent PRs that move calls behind Edge Functions, never ship service-role keys to browsers.",
+    "trust_level": "playbook"
+  }
+]

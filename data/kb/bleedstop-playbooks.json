@@ -1,0 +1,26 @@
+[
+  {
+    "id": "PB-CEILING",
+    "title": "Unpaid cluster ceiling runbook",
+    "body": "When an unpaid cluster approaches the daily dollar ceiling, DENY sms.send and LIMIT llm.call to a small model. Keep paying users failing open for login. Shadow new rules for 24h before enforce.",
+    "trust_level": "playbook"
+  },
+  {
+    "id": "PB-GHOST",
+    "title": "Ghost spend kill-switch runbook",
+    "body": "If vendor usage minus app ledger exceeds threshold: disable the key, alert on Slack/WhatsApp, open investigator card, propose wiring PR to remove client-side keys. Reversible when owner rotates credentials.",
+    "trust_level": "playbook"
+  },
+  {
+    "id": "PB-OTP-COUNTRY",
+    "title": "OTP country mismatch rule",
+    "body": "For new unpaid accounts, if phone country differs from IP country, DENY otp. Backtest on 30 days of events; enforce only if false-positive rate is under 0.5%.",
+    "trust_level": "playbook"
+  },
+  {
+    "id": "PB-WIRING",
+    "title": "Server-side key wiring",
+    "body": "Move openai/gemini calls into a server or edge function. App calls BleedStop decide first, then the function uses a secret env key. Client must never see the vendor key.",
+    "trust_level": "playbook"
+  }
+]
