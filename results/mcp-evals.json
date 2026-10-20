@@ -1,0 +1,68 @@
+{
+  "suite": "mcp-v1",
+  "ranAt": "2026-10-20T09:53:03.098Z",
+  "node": "v20.19.2",
+  "poisoning": {
+    "benign": 45,
+    "poisoned": 25,
+    "tp": 20,
+    "fn": 5,
+    "fp": 0,
+    "tn": 45,
+    "precision": 100,
+    "recall": 80,
+    "fpr": 0,
+    "suspiciousBenign": 0,
+    "misses": [
+      {
+        "id": "poisoned-ping",
+        "severity": "suspicious"
+      },
+      {
+        "id": "poisoned-pdf_reader",
+        "severity": "none"
+      },
+      {
+        "id": "poisoned-crm_lookup",
+        "severity": "none"
+      },
+      {
+        "id": "poisoned-analytics",
+        "severity": "none"
+      },
+      {
+        "id": "poisoned-help_desk",
+        "severity": "none"
+      }
+    ],
+    "falsePositives": []
+  },
+  "rugPull": {
+    "mutations": 180,
+    "detected": 180,
+    "detectionPct": 100,
+    "unchangedRelists": 45,
+    "falseAlarms": 0
+  },
+  "latency": {
+    "n": 2000,
+    "sequential": true,
+    "directMs": {
+      "p50": 0.51,
+      "p95": 0.803,
+      "p99": 1.12
+    },
+    "viaGatewayMs": {
+      "p50": 2.722,
+      "p95": 3.646,
+      "p99": 5.012
+    },
+    "addedMs": {
+      "p50": 2.212,
+      "p95": 2.843,
+      "p99": 3.892
+    },
+    "allowedCalls": 2200,
+    "note": "each call uses its own agent session and actor so velocity and budget rules do not deny; this measures the ALLOW path (full pipeline: pin, scan state, Cedar, agent guard, /decide budget, result scan)"
+  }
+}

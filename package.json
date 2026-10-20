@@ -20,7 +20,7 @@
     "drill": "node drill/run-drill.js",
     "test": "node --test tests/*.test.js",
     "attack-suite": "node benchmark/attack-suite/run.js",
-    "lint": "node --check src/server.js src/decision.js src/reconciler.js src/auth/apiKeys.js src/auth/dashboardAuth.js src/auditLog.js src/notify/slack.js src/tenant/context.js src/sdk/express.js src/sdk/client.js apps/protected-saas/server.js apps/my-saas-starter/server.js src/policy.js src/network.js src/agentGuard.js src/validate.js src/rateLimit.js src/tracing.js src/velocity.js src/db/redisShared.js",
+    "lint": "node --check src/server.js src/decision.js src/reconciler.js src/auth/apiKeys.js src/auth/dashboardAuth.js src/auditLog.js src/notify/slack.js src/tenant/context.js src/sdk/express.js src/sdk/client.js apps/protected-saas/server.js apps/my-saas-starter/server.js src/policy.js src/network.js src/agentGuard.js src/validate.js src/rateLimit.js src/tracing.js src/velocity.js src/db/redisShared.js src/mcp/toolScan.js src/mcp/pins.js src/mcp/cedarPolicy.js src/mcp/demoServers.js src/mcp/gateway.js src/openai/proxy.js src/openai/mockUpstream.js src/classifierClient.js src/extraMetrics.js bin/mcp-gateway-stdio.js",
     "secrets:check": "node scripts/check-secrets.js",
     "backup:pg": "node scripts/backup-postgres.js",
     "load:decide": "node scripts/load-decide.js",
@@ -29,12 +29,18 @@
     "rag:ingest": "node src/workers/ingestWorker.js",
     "evals": "node evals/run-evals.js --gate",
     "evals:agent": "node evals/run-agent-evals.js --gate",
-    "bench:scale": "node benchmark/scale/run.js --runs 3"
+    "bench:scale": "node benchmark/scale/run.js --runs 3",
+    "evals:mcp": "node evals/run-mcp-evals.js --gate",
+    "bench:openai": "node benchmark/openai/run.js --out results/openai-proxy.json",
+    "bench:classifier": "python classifier/benchmark.py --out results/classifier-benchmark.json --md results/CLASSIFIER-REPORT.md",
+    "obs:up": "docker compose -f deploy/observability/docker-compose.yml up -d",
+    "obs:traffic": "node deploy/observability/traffic.js 120"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@cedar-policy/cedar-wasm": "^4.14.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
     "@opentelemetry/resources": "^2.12.0",

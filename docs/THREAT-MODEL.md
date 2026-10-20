@@ -38,3 +38,20 @@
 * **Paid accounts** are not subject to the token cap or velocity rule; only the higher paid ceiling.
 * **Multi pod correctness without Redis.** In memory velocity windows and locks are per process.
 * Content safety, jailbreaks, data exfiltration (other OWASP LLM risks).
+
+## OWASP Top 10 for Agentic Applications (2026) mapping
+
+Source: OWASP GenAI Security Project, "OWASP Top 10 for Agentic Applications 2026" (December 2025), https://genai.owasp.org/download/52117. Coverage is what the code does today; "partial" and "not covered" are stated plainly.
+
+| ID | Risk | BleedStop control | Where | Coverage |
+|---|---|---|---|---|
+| ASI01 | Agent Goal Hijack | Injection families on prompts, tool arguments and tool **results** (indirect injection is stripped before it reaches the model in enforce mode); optional trained classifier as a second stage | `src/agentGuard.js`, `src/mcp/gateway.js` (result scan), `classifier/` | Partial: regex held out recall is low (see AGENT-GUARD.md and the classifier benchmark) |
+| ASI02 | Tool Misuse and Exploitation | Every MCP `tools/call` goes through Cedar per tenant, per tool policy (default deny, forbid, approval), argument constraints (external email domains, payment amount, paste sites), tool loop and velocity limits, and the same $ budget as other actions | `src/mcp/cedarPolicy.js`, `config/mcp-policy.cedar`, `src/agentGuard.js` | Covered for calls routed through the gateway |
+| ASI03 | Identity and Privilege Abuse | API key to tenant mapping (hashed keys), tenant is the Cedar principal, RBAC on admin routes, audit log; secrets in network tool arguments are blocked | `src/auth/*`, `src/auditLog.js` | Partial: no per agent identity (OIDC / workload identity) yet |
+| ASI04 | Agentic Supply Chain Vulnerabilities | Tool definition pinning by sha256 (trust on first use or a reviewed pin file); a changed definition (rug pull) is hidden from tools/list and denied on call; tool poisoning scan of descriptions and schema text | `src/mcp/pins.js`, `src/mcp/toolScan.js` | Covered for MCP tool definitions; package / model provenance not covered |
+| ASI05 | Unexpected Code Execution (RCE) | Cedar forbids shell / exec tools by name; secrets and paste site hosts in arguments are denied | `config/mcp-policy.cedar` | Partial: name based; no sandboxing of the tool server itself |
+| ASI06 | Memory and Context Poisoning | Tool outputs are scanned for instructions before they enter the context; RAG text is wrapped as data for the investigator agents | `src/mcp/gateway.js`, `src/agents/*` | Partial: no long term memory store to protect |
+| ASI07 | Insecure Inter-Agent Communication | Not covered (no A2A transport). Recursion depth limit stops runaway agent spawning | `src/agentGuard.js` (depth) | Not covered |
+| ASI08 | Cascading Failures | Per action fail policy, Redis degradation to local caps, budgets and velocity limits cap blast radius, rate limit on the control plane | `src/failPolicy.js`, ADR-0009 | Covered for spend; not for semantic error propagation |
+| ASI09 | Human-Agent Trust Exploitation | CHALLENGE decision = human approval required (external email, payments over $50); approvals are not decided by the model | `config/mcp-policy.cedar` (@effect("challenge")) | Partial: approval UI / workflow is up to the host app |
+| ASI10 | Rogue Agents | Shadow and enforce modes, per tool decision metrics and audit trail, kill switch on keys, budget ceilings per agent actor | `src/mcp/gateway.js`, `src/reconciler.js`, `/metrics` | Partial: detection is rule based, no behavioural baseline |

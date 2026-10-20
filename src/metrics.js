@@ -62,6 +62,8 @@ export function snapshot() {
   };
 }
 
+import { renderExtra } from "./extraMetrics.js";
+
 /** Prometheus text exposition format */
 export function renderPrometheus() {
   const s = snapshot();
@@ -101,7 +103,7 @@ export function renderPrometheus() {
     "# TYPE bleedstop_denied_usd_total counter",
     `bleedstop_denied_usd_total ${Math.round(deniedUsdTotal * 1e6) / 1e6}`,
   ];
-  return lines.join("\n") + "\n";
+  return lines.join("\n") + "\n" + renderExtra();
 }
 
 export function resetMetrics() {

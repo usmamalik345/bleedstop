@@ -1,0 +1,328 @@
+{
+ "uid": "bleedstop",
+ "title": "BleedStop: MCP gateway and LLM proxy",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-15m",
+  "to": "now"
+ },
+ "refresh": "10s",
+ "panels": [
+  {
+   "type": "stat",
+   "title": "MCP tool calls",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_mcp_tool_calls_total)"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Rug pulls caught",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_mcp_rug_pull_total)"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Poisoned tools seen",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_mcp_tool_poisoned_total)"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "LLM spend (USD)",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyUSD"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_llm_cost_usd_total)"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Streams cut mid flight",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_llm_stream_cut_total)"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Tool calls blocked (LLM)",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 0,
+    "w": 4,
+    "h": 4
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(bleedstop_llm_tool_calls_blocked_total)"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "MCP tool calls by decision",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 4,
+    "w": 12,
+    "h": 7
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (decision) (rate(bleedstop_mcp_tool_calls_total[1m]))",
+     "legendFormat": "{{decision}}"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "LLM proxy requests by decision",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 4,
+    "w": 12,
+    "h": 7
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (decision) (rate(bleedstop_llm_proxy_requests_total[1m]))",
+     "legendFormat": "{{decision}}"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "Tokens per second",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 11,
+    "w": 12,
+    "h": 7
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (type) (rate(bleedstop_llm_tokens_total[1m]))",
+     "legendFormat": "{{type}}"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "Overhead p50 / p99 (ms)",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 11,
+    "w": 12,
+    "h": 7
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "histogram_quantile(0.5, sum by (le) (rate(bleedstop_mcp_gateway_overhead_ms_bucket[1m])))",
+     "legendFormat": "MCP p50"
+    },
+    {
+     "refId": "B",
+     "expr": "histogram_quantile(0.99, sum by (le) (rate(bleedstop_mcp_gateway_overhead_ms_bucket[1m])))",
+     "legendFormat": "MCP p99"
+    },
+    {
+     "refId": "C",
+     "expr": "histogram_quantile(0.5, sum by (le) (rate(bleedstop_llm_proxy_overhead_ms_bucket[1m])))",
+     "legendFormat": "LLM p50"
+    },
+    {
+     "refId": "D",
+     "expr": "histogram_quantile(0.99, sum by (le) (rate(bleedstop_llm_proxy_overhead_ms_bucket[1m])))",
+     "legendFormat": "LLM p99"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "GenAI spans per second (span metrics, OTel GenAI semconv)",
+   "datasource": {
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 18,
+    "w": 24,
+    "h": 7
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (span_name) (rate(traces_span_metrics_calls_total[3m]))",
+     "legendFormat": "{{span_name}}"
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "title": "Recent GenAI traces (Tempo)",
+   "datasource": {
+    "uid": "tempo"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 25,
+    "w": 24,
+    "h": 8
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "queryType": "traceql",
+     "query": "{ span.gen_ai.operation.name != nil }",
+     "limit": 20
+    }
+   ]
+  }
+ ]
+}

@@ -11,6 +11,7 @@ export const prices = {
   "payment.attempt": { usd: 5, vendor: "stripe" },
   "signup.create": { usd: 0, vendor: "app" },
   "auth.login": { usd: 0, vendor: "app" },
+  "mcp.tool_call": { usd: 0.002, vendor: "mcp" },
 };
 
 export function getPrice(action) {

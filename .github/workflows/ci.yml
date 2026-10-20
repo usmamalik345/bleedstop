@@ -54,6 +54,8 @@ jobs:
         run: node evals/run-evals.js --label ci --out eval-results.json --md EVAL-REPORT.md --gate
       - name: Agent guard evals (dev + held-out gate)
         run: node evals/run-agent-evals.js --out agent-evals.json --md AGENT-EVAL-REPORT.md --gate
+      - name: MCP gateway evals (poisoning scan + rug pull gate)
+        run: node evals/run-mcp-evals.js --out mcp-evals.json --gate
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -63,6 +65,7 @@ jobs:
             EVAL-REPORT.md
             agent-evals.json
             AGENT-EVAL-REPORT.md
+            mcp-evals.json
 
   attack-suite:
     runs-on: ubuntu-latest

@@ -53,6 +53,9 @@ import {
   isStripeWebhookConfigured,
 } from "./vendors/stripeWebhook.js";
 import { requireApiKey, apiKeysEnabled } from "./auth/apiKeys.js";
+import { precheckTwoStage, classifierEnabled } from "./classifierClient.js";
+import { openaiHandler } from "./openai/proxy.js";
+import { handleMcpMessage, gatewayMode, recentMcpAudit, runScenario } from "./mcp/gateway.js";
 import {
   currentDashboardUser,
   dashboardAuthStatus,
@@ -317,7 +320,38 @@ app.post("/agent/precheck", (req, res) => {
   const b = req.body ?? {};
   const v = validateDecide({ actorId: "precheck", action: "auth.login", agent: b });
   if (!v.ok) return res.status(400).json({ error: "invalid request", details: v.errors });
-  res.json(precheckAgentCall({ ...b, useClassifier: Boolean(b.useClassifier) }, getPolicy()));
+  if (b.twoStage !== false && classifierEnabled()) return precheckTwoStage({ ...b, useClassifier: Boolean(b.useClassifier) }, getPolicy()).then((r) => res.json(r));
+  res.json({ ...precheckAgentCall({ ...b, useClassifier: Boolean(b.useClassifier) }, getPolicy()), firedStage: undefined, classifier: classifierEnabled() ? "on" : "off (set CLASSIFIER_URL)" });
+});
+
+/* ---------- OpenAI compatible proxy (base_url = <bleedstop>/v1) ---------- */
+app.post("/v1/chat/completions", openaiHandler("chat"));
+app.post("/v1/responses", openaiHandler("responses"));
+app.get("/v1/models", (_req, res) => res.json({ object: "list", data: [{ id: "gpt-4o-mini", object: "model", owned_by: "bleedstop-proxy" }, { id: "gpt-4o", object: "model", owned_by: "bleedstop-proxy" }] }));
+
+/* ---------- MCP security gateway (streamable HTTP, JSON responses) ---------- */
+app.post("/mcp/:server", async (req, res) => {
+  const tenantId = req.tenantId || getTenantId();
+  const msgs = Array.isArray(req.body) ? req.body : [req.body];
+  const mode = req.query.mode === "shadow" ? "shadow" : gatewayMode();
+  try {
+    const out = [];
+    for (const msg of msgs) {
+      if (!msg || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") { out.push({ jsonrpc: "2.0", id: msg?.id ?? null, error: { code: -32600, message: "Invalid Request" } }); continue; }
+      const r = await handleMcpMessage({ tenantId, serverId: req.params.server, msg, sessionId: req.get("mcp-session-id"), actorId: req.get("x-actor-id") || undefined, mode });
+      if (r.response) out.push(r.response);
+    }
+    if (!out.length) return res.status(202).end();
+    res.json(Array.isArray(req.body) ? out : out[0]);
+  } catch (err) {
+    res.status(err.code === -32004 ? 404 : 502).json({ jsonrpc: "2.0", id: req.body?.id ?? null, error: { code: err.code || -32603, message: err.message } });
+  }
+});
+app.get("/mcp/audit", (req, res) => res.json({ tenantId: req.tenantId || getTenantId(), mode: gatewayMode(), events: recentMcpAudit(req.tenantId || getTenantId()) }));
+app.post("/mcp-demo/run", async (req, res) => {
+  try {
+    res.json(await runScenario(req.tenantId || getTenantId(), String(req.body?.scenario || ""), req.body?.mode === "shadow" ? "shadow" : "enforce"));
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 /** Effective policy for the caller's tenant (admin only; no secrets in policy). */

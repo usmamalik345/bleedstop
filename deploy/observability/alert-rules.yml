@@ -1,0 +1,27 @@
+groups:
+  - name: bleedstop
+    rules:
+      - alert: McpRugPullDetected
+        expr: increase(bleedstop_mcp_rug_pull_total[5m]) > 0
+        labels: { severity: critical }
+        annotations: { summary: "An MCP tool definition changed after it was pinned (possible rug pull)" }
+      - alert: McpPoisonedToolSeen
+        expr: increase(bleedstop_mcp_tool_poisoned_total[5m]) > 0
+        labels: { severity: warning }
+        annotations: { summary: "A tool description matched the poisoning scan" }
+      - alert: LlmSpendSpike
+        expr: sum(rate(bleedstop_llm_cost_usd_total[5m])) * 3600 > 5
+        labels: { severity: warning }
+        annotations: { summary: "LLM spend through the proxy is running above 5 USD per hour" }
+      - alert: LlmStreamsBeingCut
+        expr: increase(bleedstop_llm_stream_cut_total[5m]) > 10
+        labels: { severity: warning }
+        annotations: { summary: "Many streams hit the output token cap mid flight" }
+      - alert: GatewayOverheadHigh
+        expr: histogram_quantile(0.99, sum by (le) (rate(bleedstop_mcp_gateway_overhead_ms_bucket[5m]))) > 25
+        labels: { severity: warning }
+        annotations: { summary: "MCP gateway p99 overhead above 25 ms" }
+      - alert: ClassifierFailingOpen
+        expr: increase(bleedstop_classifier_errors_total[5m]) > 5
+        labels: { severity: warning }
+        annotations: { summary: "Injection classifier is timing out or erroring (requests fail open to regex)" }

@@ -204,6 +204,51 @@ See `deploy/README.md` (kind + Helm: API, HPA, NetworkPolicy, CronJob reconcile)
 | `npm run db:up` | Postgres + Redis |
 | `npm run stack:up` | Full docker compose |
 
+## v2 features (MCP gateway, classifier, OpenAI proxy, observability)
+
+All numbers below are **local benchmarks** on one Linux box (Node 20, CPU only, in memory state, mock or in process upstreams). They are not production measurements. Raw output lives in `results/`.
+
+### 1. MCP security gateway with policy as code
+
+`POST /mcp/:server` (streamable HTTP JSON-RPC) and `bin/mcp-gateway-stdio.js` (stdio) sit in front of MCP tool servers. Every `tools/call` goes through, in order: definition pin check (TOFU sha256 over name, description, inputSchema, annotations), tool description poisoning scan, per tenant Cedar policy (`config/mcp-policy.cedar`, `@effect("challenge")` maps to CHALLENGE), the agent injection guard on arguments, then the normal BleedStop `decide()` budget. Tool results are scanned for indirect injection. `MCP_GATEWAY_MODE=shadow` logs decisions without blocking. OWASP Agentic Top 10 (ASI01 to ASI10) mapping with honest coverage is in `docs/THREAT-MODEL.md`.
+
+| Measure (`npm run evals:mcp`, 70 hand written tool definitions) | Result |
+|---|---|
+| Poisoning scan precision / recall / FPR | 100% / 80% (20 of 25) / 0% (0 of 45) |
+| Rug pull detection | 180 of 180 mutations caught, 0 false alarms on 45 unchanged re lists |
+| Added latency per tools/call over HTTP, n=2000 | p50 2.21 ms, p95 2.84 ms, p99 3.89 ms |
+
+Misses are subtle, polite poisonings with no trigger phrase (5 of 25). The eval set was written by us, so treat recall as optimistic.
+
+### 2. Trained injection classifier (second stage)
+
+`classifier/server.py` serves `protectai/deberta-v3-base-prompt-injection-v2` (FastAPI). With `CLASSIFIER_URL` set, `/agent/precheck` and the MCP gateway run regex first, then the classifier with a 300 ms timeout that fails open to the regex verdict. Full table: `results/CLASSIFIER-REPORT.md` (`npm run bench:classifier`).
+
+| Set | Regex recall / FPR | Classifier recall / FPR | Two stage recall / FPR |
+|---|---|---|---|
+| deepset/prompt-injections, all 662 | 4.2% / 0% | 41.4% / 1.0% | 41.4% / 1.0% |
+| BleedStop held out, 80 | 22.5% / 0% | 77.5% / 5.0% | 80.0% / 5.0% |
+| BleedStop dev (regex tuned on it), 112 | 96.4% / 0% | 83.6% / 7.0% | 96.4% / 7.0% |
+
+Latency on 4 CPU threads: regex p50 about 9 us; classifier p50 about 46 to 49 ms, p99 55 to 132 ms. Caveats: deepset includes German rows and the model is English only; training overlap with public sets cannot be ruled out; the PINT row in the report is the public 8 row example file, not a PINT score; Llama Prompt Guard 2 is gated and was not evaluated.
+
+### 3. OpenAI compatible proxy
+
+Point an OpenAI SDK at `<bleedstop>/v1`. `POST /v1/chat/completions` (streaming and not), `POST /v1/responses`, `GET /v1/models`. Each request reserves budget for prompt plus capped output, DENY returns 429 and CHALLENGE 403 in OpenAI error shape, LIMIT downgrades to the small model. The output cap is the smallest of requested, `OPENAI_PROXY_MAX_OUTPUT_TOKENS` (1024) and remaining budget, and is enforced mid stream even if the upstream ignores `max_tokens`. Reservations are committed with actual usage. Model `tool_calls` go through Cedar and the agent guard. The live demo uses a deterministic mock upstream; set `OPENAI_PROXY_UPSTREAM` for a real one.
+
+| Measure (`npm run bench:openai`, mock upstream over HTTP) | Result |
+|---|---|
+| Added latency, n=1000 non streaming | p50 1.53 ms, p99 1.86 ms |
+| Streaming flood: 40 requests for 20,000 words, upstream ignores max_tokens | 40 of 40 streams cut mid flight; $10.70 would be billed unprotected vs $0.41 through the proxy ($10.29 prevented) |
+
+Pricing in the flood uses the policy rate of $0.01 per 1k tokens with tokens approximated as chars/4.
+
+### 4. OpenTelemetry GenAI spans and observability stack
+
+Spans follow the OTel GenAI semantic conventions: `chat {model}` with `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens/output_tokens`, and `execute_tool {name}` with `gen_ai.tool.name`. `deploy/observability/` holds a Docker Compose stack (OTel Collector with span metrics, Tempo, Prometheus with 6 alert rules, Grafana with a provisioned dashboard). Run `npm run obs:up`, start BleedStop with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`, then `npm run obs:traffic`.
+
+![Grafana dashboard with real local traffic](docs/img/grafana-dashboard.png)
+
 ## Honest scope
 
 - Control plane, SDK, clustering, rules, ghost reconcile, RAG investigator, K8s chart: **implemented**

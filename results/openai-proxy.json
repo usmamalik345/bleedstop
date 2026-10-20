@@ -1,0 +1,48 @@
+{
+  "suite": "openai-proxy-v1",
+  "ranAt": "2026-10-20T09:58:59.566Z",
+  "node": "v20.19.2",
+  "overhead": {
+    "n": 1000,
+    "directMs": {
+      "p50": 0.607,
+      "p95": 0.894,
+      "p99": 2.535
+    },
+    "viaProxyMs": {
+      "p50": 2.132,
+      "p95": 2.852,
+      "p99": 4.396
+    },
+    "addedMs": {
+      "p50": 1.525,
+      "p99": 1.861
+    }
+  },
+  "streamingFlood": {
+    "requests": 40,
+    "actor": "one free tier actor, $5 ceiling",
+    "upstreamIgnoresMaxTokens": true,
+    "allowed": 40,
+    "denied": 0,
+    "streamsCutMidFlight": 40,
+    "unprotectedUsd": 10.704,
+    "protectedUsd": 0.414,
+    "preventedUsd": 10.29,
+    "pricing": "0.01 USD per 1k tokens (policy llmUsdPer1kTokens), tokens approximated as chars/4 by the mock",
+    "metricsSample": [
+      "bleedstop_llm_proxy_requests_total{api=\"chat\",decision=\"ALLOW\"} 1140",
+      "bleedstop_llm_tokens_total{type=\"input\"} 7000",
+      "bleedstop_llm_tokens_total{type=\"output\"} 70660",
+      "bleedstop_llm_cost_usd_total{tenant=\"local-dev\"} 0.7766",
+      "bleedstop_llm_stream_cut_total{api=\"chat\"} 40",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"0.5\"} 0",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"1\"} 460",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"2\"} 1073",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"5\"} 1099",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"10\"} 1099",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"25\"} 1099",
+      "bleedstop_llm_proxy_overhead_ms_bucket{api=\"chat\",le=\"50\"} 1100"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+receivers:
+  otlp:
+    protocols: { grpc: { endpoint: 0.0.0.0:4317 }, http: { endpoint: 0.0.0.0:4318 } }
+connectors:
+  spanmetrics:
+    metrics_flush_interval: 15s
+    histogram: { explicit: { buckets: [1ms, 2ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 1s] } }
+    dimensions: [{ name: gen_ai.operation.name }, { name: gen_ai.request.model }, { name: gen_ai.tool.name }, { name: bleedstop.decision }]
+processors:
+  batch: {}
+exporters:
+  otlp/tempo: { endpoint: tempo:4317, tls: { insecure: true } }
+  prometheusremotewrite: { endpoint: http://prometheus:9090/api/v1/write, resource_to_telemetry_conversion: { enabled: true } }
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [batch], exporters: [otlp/tempo, spanmetrics] }
+    metrics: { receivers: [spanmetrics], processors: [batch], exporters: [prometheusremotewrite] }
