@@ -22,7 +22,7 @@ Links recruiters / interviewers can open in this repo:
 
 ```powershell
 docker compose -f deploy/observability/docker-compose.yml up -d
-# open http://localhost:3001  (check compose file for exact port)
+# Grafana: http://localhost:3300  · Prometheus: http://localhost:9090
 ```
 
 AWS `terraform apply` is optional later — code + CI validate already land without a cloud account.
