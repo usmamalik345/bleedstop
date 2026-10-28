@@ -9,7 +9,9 @@ BleedStop traffic spikes during attacks. The Decision API must stay fast, while 
 - **Jobs** — RAG ingest / drills  
 - **NetworkPolicies** — agents/workers cannot talk to random internet; API can talk to Redis/Postgres  
 
-Start with **Docker Compose** or **kind**. Move to EKS later when revenue pays for it.
+Start with **Docker Compose** or **kind**.  
+For AWS staging boxes, use **Terraform** under `deploy/terraform/` (VPC + EC2 + Docker).  
+Move to EKS later when revenue pays for it.
 
 ## Path A — Docker Compose (easiest full stack)
 
@@ -50,16 +52,41 @@ helm uninstall bleedstop -n bleedstop-dev
 kind delete cluster --name bleedstop
 ```
 
+## Path C — Terraform AWS staging (IaC)
+
+Creates a small VPC + Ubuntu EC2 (Docker pre-installed via cloud-init).  
+You then run **Path A production compose** on that box.
+
+```powershell
+cd deploy/terraform
+copy terraform.tfvars.example terraform.tfvars
+terraform init
+terraform plan
+# terraform apply   # costs money — read deploy/terraform/README.md first
+```
+
+Full notes: `deploy/terraform/README.md`.
+
+## Path D — Argo CD GitOps (optional)
+
+```powershell
+kubectl apply -f deploy/argocd/app-bleedstop.yaml
+```
+
+Edit `repoURL` first. See `deploy/argocd/README.md`.  
+Pair with GHCR images from `.github/workflows/cd-ghcr.yml`.
+
 ## What runs where
 
-| Component | Compose | Kubernetes |
-|-----------|---------|------------|
-| Decision API | `bleedstop` service | Deployment + Service + HPA |
-| Reconciler | `reconciler` service | CronJob → calls API `/reconcile` |
-| RAG ingest | on API boot + `/rag/ingest` | Helm Job + API endpoint |
-| Postgres | `postgres` | Deployment (dev) / RDS later |
-| Redis | `redis` | Deployment (dev) / ElastiCache later |
-| Agents | API routes `/investigate`, `/agents/*` | Same API pods (off hot path) |
+| Component | Compose | Kubernetes | Terraform staging |
+|-----------|---------|------------|-------------------|
+| Decision API | `bleedstop` service | Deployment + Service + HPA | Same Compose on EC2 |
+| Reconciler | `reconciler` service | CronJob → calls API `/reconcile` | Same Compose on EC2 |
+| RAG ingest | on API boot + `/rag/ingest` | Helm Job + API endpoint | Same Compose on EC2 |
+| Postgres | `postgres` | Deployment (dev) / RDS later | Compose on EC2 (RDS later) |
+| Redis | `redis` | Deployment (dev) / ElastiCache later | Compose on EC2 (later) |
+| Agents | API routes `/investigate`, `/agents/*` | Same API pods (off hot path) | Same |
+| Cloud network | — | kind local | VPC + SG + EIP |
 
 ## Security notes (learning)
 

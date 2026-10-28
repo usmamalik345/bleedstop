@@ -75,6 +75,19 @@ docker compose --env-file .env.production -f deploy/production/docker-compose.pr
 
 Caddy gives HTTPS automatically when DNS points to the server.
 
+## AWS staging via Terraform
+
+To create a VPC + EC2 box for this Compose stack:
+
+```powershell
+cd deploy/terraform
+copy terraform.tfvars.example terraform.tfvars
+terraform init
+terraform plan
+```
+
+See `deploy/terraform/README.md` (costs money — destroy when idle).
+
 ## Still not included
 
 - managed cloud backups

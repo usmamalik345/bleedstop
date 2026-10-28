@@ -1,0 +1,31 @@
+# Argo CD Application — syncs deploy/helm/bleedstop from Git.
+# Replace repoURL with your fork/remote before apply.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bleedstop
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/usmamalik345/bleedstop.git
+    targetRevision: HEAD
+    path: deploy/helm/bleedstop
+    helm:
+      releaseName: bleedstop
+      values: |
+        # Override image after CD pushes to GHCR:
+        # image:
+        #   repository: ghcr.io/usmamalik345/bleedstop
+        #   tag: latest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bleedstop-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

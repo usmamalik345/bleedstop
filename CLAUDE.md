@@ -104,6 +104,10 @@ Finish with this short block:
   - `src/rag/*` — ingest/retrieve/citations (agents only)
   - `src/agents/*` — investigator, rule, wiring (never on hot path)
   - `deploy/helm/bleedstop` — Kubernetes chart
+ - `deploy/terraform` — AWS staging IaC (VPC + SG + EC2 + SSM; optional RDS/Redis/EKS)
+ - `deploy/argocd` — GitOps Application for Helm
+ - `docs/postmortems` + `docs/runbooks` — ops proof
+ - `.github/workflows/cd-ghcr.yml` — GHCR image CD
   - `src/sdk/client.js` — wrap expensive app calls
   - `victim/resume-glow.js` — demo app
   - `public/dashboard/` — operator UI

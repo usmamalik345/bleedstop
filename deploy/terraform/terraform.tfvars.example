@@ -1,0 +1,26 @@
+# Copy to terraform.tfvars (gitignored) and edit.
+# Never commit real secrets or your home IP if you care about privacy.
+
+aws_region   = "us-east-1"
+environment  = "staging"
+name_prefix  = "bleedstop-staging"
+
+# Leave empty to auto-pick the first AZ in the region.
+availability_zone = ""
+
+instance_type  = "t3.small"
+root_volume_gb = 30
+allocate_eip   = true
+enable_ssm     = true
+
+# Prefer SSM. Only set these if you really need SSH:
+# key_name = "my-keypair"
+# ssh_cidr = "203.0.113.10/32"
+key_name = null
+ssh_cidr = null
+
+# --- Optional extras (default OFF — real AWS $) ---
+enable_rds         = false
+enable_elasticache = false
+enable_eks         = false
+# rds_password     = "change-me-long-password"   # required if enable_rds=true

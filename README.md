@@ -3,6 +3,8 @@
 **Cost abuse control plane for LLM, SMS and payment APIs (OWASP LLM10 "Unbounded Consumption").** Apps call `POST /decide` before they spend money; BleedStop answers `ALLOW | LIMIT | CHALLENGE | DENY` from deterministic, per tenant rules, enforced atomically across instances via Redis.
 
 [![CI](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml)
+[![Terraform](https://github.com/usmamalik345/bleedstop/actions/workflows/terraform.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/terraform.yml)
+[![CD GHCR](https://github.com/usmamalik345/bleedstop/actions/workflows/cd-ghcr.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/cd-ghcr.yml)
 **Project site:** https://usmamalik345.github.io/bleedstop/ · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
 
 ### Live demo API

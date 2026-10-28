@@ -65,6 +65,23 @@ BleedStop keeps a **live bill per bot group**, and later checks the **vendor bil
 
 **Can you explain?** Why the CronJob calls the API instead of keeping its own ledger?
 
+### Day 8 — Terraform (cloud recipe)
+1. Read `deploy/terraform/README.md`  
+2. Skim `modules/vpc` → `security` → `compute` (order matters)  
+3. `cd deploy/terraform` → `terraform init` → `terraform validate`  
+4. Only if you accept AWS cost: copy `terraform.tfvars.example` → `plan` → (optional) `apply`  
+5. Always `terraform destroy` when you stop learning on that box  
+
+**Can you explain?** What does Terraform own vs what Docker Compose still owns?
+
+### Day 9 — Ops proof (no AWS required)
+1. Read `docs/runbooks/README.md` — pick Redis or ghost-spend  
+2. Read one file in `docs/postmortems/`  
+3. Skim `.github/workflows/cd-ghcr.yml` + `deploy/argocd/README.md`  
+4. Paste CV bullets from `PORTFOLIO.md` into your resume  
+
+**Can you explain?** Why a runbook is different from a postmortem?
+
 ## Commands cheat sheet
 
 ```bash
@@ -91,8 +108,14 @@ Kubernetes: see `deploy/README.md`.
 - Docker Compose (Postgres + Redis + reconciler)  
 - kind/Helm: Deployment, HPA, NetworkPolicy, CronJob, ingest Job  
 
+**Included for IaC / ops learning:**
+- `deploy/terraform/` — VPC + EC2 + SSM; optional RDS / ElastiCache / EKS flags  
+- `deploy/argocd/` — GitOps Application for the Helm chart  
+- `.github/workflows/cd-ghcr.yml` — push image to GHCR  
+- `docs/postmortems/` + `docs/runbooks/` — ops proof  
+
 **Still later (real production):**
-- EKS + Argo CD GitOps  
+- Always-on paid EKS with real traffic  
 - Real OpenAI/Twilio usage connectors  
 - Hosted embedding/rerank models  
 - Multi-tenant hard isolation / KMS

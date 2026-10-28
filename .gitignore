@@ -32,3 +32,11 @@ id_rsa*
 
 .vercel
 .env*
+
+# Terraform (root safety net; primary ignore is deploy/terraform/.gitignore)
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform.tfvars
+!**/*.tfvars.example
+**/*.tfplan

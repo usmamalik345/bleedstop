@@ -1,0 +1,24 @@
+# Local Terraform junk — never commit these
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Your real values (may contain home IP)
+terraform.tfvars
+*.auto.tfvars
+!terraform.tfvars.example
+
+# Plan files
+*.tfplan
+plan.out
+
+# NOTE: commit .terraform.lock.hcl so provider versions stay pinned for everyone/CI
