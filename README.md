@@ -5,7 +5,7 @@
 [![CI](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/ci.yml)
 [![Terraform](https://github.com/usmamalik345/bleedstop/actions/workflows/terraform.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/terraform.yml)
 [![CD GHCR](https://github.com/usmamalik345/bleedstop/actions/workflows/cd-ghcr.yml/badge.svg)](https://github.com/usmamalik345/bleedstop/actions/workflows/cd-ghcr.yml)
-**Project site:** https://usmamalik345.github.io/bleedstop/ · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
+**Project site:** [osamamalik.me/bleedstop](https://osamamalik.me/bleedstop.html) · **Write-up:** [How I built BleedStop](https://osamamalik.me/blog/bleedstop-cost-and-security-guard.html) · **Author:** [Osama Malik, AI Agent Engineer](https://osamamalik.me/) · **Enterprise overview:** [README-enterprise.md](README-enterprise.md) · **Measured results:** [results/](results/) · **ADRs:** [docs/adr/](docs/adr/)
 
 ### Live demo API
 **[https://bleedstop-demo.vercel.app](https://bleedstop-demo.vercel.app/)** (interactive demo page; API health at [/api/health](https://bleedstop-demo.vercel.app/api/health)) with a public, demo only key `demo-public-key` (tenant `demo`, in memory, no real providers).
